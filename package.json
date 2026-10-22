@@ -1,0 +1,46 @@
+{
+  "name": "asterbyte-voice-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24.18.0 <25",
+    "npm": ">=12 <13"
+  },
+  "packageManager": "npm@12.0.1",
+  "allowScripts": {
+    "esbuild": false
+  },
+  "scripts": {
+    "dev": "npm run build --workspace @asterbyte/contracts && concurrently --kill-others --names contracts,api,web \"npm run dev --workspace @asterbyte/contracts\" \"npm run dev --workspace @asterbyte/api\" \"npm run dev --workspace @asterbyte/web\"",
+    "build": "npm run build --workspace @asterbyte/contracts && npm run build --workspace @asterbyte/api && npm run build --workspace @asterbyte/web",
+    "start": "npm run start --workspace @asterbyte/api",
+    "typecheck": "npm run build --workspace @asterbyte/contracts && npm run typecheck --workspaces --if-present",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm run build --workspace @asterbyte/contracts && npm run test --workspaces --if-present",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build",
+    "smoke": "npm run build && node scripts/smoke.mjs",
+    "smoke:dev": "npm run build --workspace @asterbyte/contracts && node scripts/smoke.mjs --dev"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.2",
+    "concurrently": "10.0.6",
+    "eslint": "10.13.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.7",
+    "globals": "17.13.0",
+    "prettier": "3.9.10",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "5.0.5"
+  }
+}
