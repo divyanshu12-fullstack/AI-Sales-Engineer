@@ -19,16 +19,22 @@
     "dev": "npm run build --workspace @asterbyte/contracts && concurrently --kill-others --names contracts,api,web \"npm run dev --workspace @asterbyte/contracts\" \"npm run dev --workspace @asterbyte/api\" \"npm run dev --workspace @asterbyte/web\"",
     "build": "npm run build --workspace @asterbyte/contracts && npm run build --workspace @asterbyte/api && npm run build --workspace @asterbyte/web",
     "start": "npm run start --workspace @asterbyte/api",
-    "typecheck": "npm run build --workspace @asterbyte/contracts && npm run typecheck --workspaces --if-present",
+    "typecheck": "npm run build --workspace @asterbyte/contracts && tsc -p scripts/database/tsconfig.json && npm run typecheck --workspaces --if-present",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "npm run build --workspace @asterbyte/contracts && npm run test --workspaces --if-present",
+    "test": "npm run build --workspace @asterbyte/contracts && npm run test:database && npm run test --workspaces --if-present",
+    "test:database": "vitest run --config scripts/database/vitest.config.ts",
+    "db:validate": "tsx scripts/database/cli.ts validate",
+    "db:seed:sql": "tsx scripts/database/cli.ts seed-sql",
+    "db:verify:sql": "tsx scripts/database/cli.ts verify-sql",
+    "db:verify:rest": "tsx scripts/database/verify-rest.ts",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build",
     "smoke": "npm run build && node scripts/smoke.mjs",
     "smoke:dev": "npm run build --workspace @asterbyte/contracts && node scripts/smoke.mjs --dev"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.11",
     "@eslint/js": "10.0.1",
     "@types/node": "24.19.2",
     "concurrently": "10.0.6",
@@ -41,6 +47,7 @@
     "tsx": "4.23.15",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.0",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "zod": "4.6.7"
   }
 }

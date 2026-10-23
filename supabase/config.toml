@@ -1,0 +1,11 @@
+project_id = "asterbyte-voice-agent"
+
+[api]
+schemas = ["public"]
+
+[db]
+major_version = 17
+
+[db.seed]
+# Initial records are loaded only through the reviewed explicit import, never an automatic reset.
+enabled = false

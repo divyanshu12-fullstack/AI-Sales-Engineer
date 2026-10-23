@@ -3,3 +3,6 @@ node_modules/
 coverage/
 package-lock.json
 .agents/
+# Supplied source packs have byte-exact Markdown snapshots and SHA-256 hashes.
+docs/knowledge-base/
+docs/database-plan/

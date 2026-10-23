@@ -26,6 +26,7 @@ export default defineConfig(
           './apps/web/tsconfig.json',
           './packages/contracts/tsconfig.json',
           './packages/contracts/tsconfig.test.json',
+          './scripts/database/tsconfig.json',
         ],
       },
     },

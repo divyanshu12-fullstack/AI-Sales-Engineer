@@ -34,8 +34,8 @@ export const getReadiness = (config: Env): ReadinessResponse => ({
         missingVariables,
         reason:
           missingVariables.length > 0
-            ? 'Required configuration is missing. Integration is not implemented or verified.'
-            : 'Configuration is present. Integration is not implemented or verified.',
+            ? 'Required configuration is missing. Runtime adapter is not implemented or verified.'
+            : 'Configuration is present. Runtime adapter is not implemented or verified.',
       };
     }),
   },

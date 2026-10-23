@@ -2,7 +2,7 @@ import type { IntegrationId } from '@asterbyte/contracts';
 import { useFoundationStatus } from './features/foundation/use-foundation-status.js';
 
 const integrationNames: Record<IntegrationId, string> = {
-  supabase: 'Database & authentication',
+  supabase: 'Supabase runtime API & authentication',
   bolna: 'Bolna browser calling',
   llm: 'Language model',
   embeddings: 'Knowledge embeddings',
@@ -19,10 +19,10 @@ export const App = () => {
       <header className="border-b border-stone-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-5">
           <a className="text-xl font-bold tracking-tight" href="/">
-            Asterbyte<span className="font-normal text-slate-500"> Studio</span>
+            AsterByte<span className="font-normal text-slate-500"> Solutions</span>
           </a>
           <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-medium text-amber-900">
-            Milestone 1 · Engineering foundation
+            Database foundation · Live features unavailable
           </span>
         </div>
       </header>
@@ -92,7 +92,8 @@ export const App = () => {
                 Voice calling unavailable
               </button>
               <p id="calling-availability" className="mt-3 text-sm leading-relaxed text-slate-500">
-                Browser calling is planned for milestone 7. No microphone access is requested here.
+                Browser calling is planned for a later integration milestone. No microphone access
+                is requested here.
               </p>
             </div>
           </section>
@@ -133,7 +134,7 @@ export const App = () => {
         </div>
 
         <footer className="mt-10 text-sm leading-relaxed text-slate-500">
-          Asterbyte Studio is a fictional demonstration consultancy. No customer records,
+          AsterByte Solutions is a fictional demonstration consultancy. No customer records,
           appointments, emails or calls have been created by this screen.
         </footer>
       </main>

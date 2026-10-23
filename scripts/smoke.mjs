@@ -126,7 +126,7 @@ try {
 
   const page = await waitFor(webUrl, web);
   const html = await page.text();
-  assert(html.includes('<title>Asterbyte Studio | Voice Platform</title>'));
+  assert(html.includes('<title>AsterByte Solutions | Voice Platform</title>'));
   const scripts = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)];
   const entry = scripts.find(([, path]) => path !== '/@vite/client')?.[1];
   assert(entry, 'The web page must reference a JavaScript entry point.');

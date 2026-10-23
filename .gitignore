@@ -20,6 +20,8 @@ lerna-debug.log*
 !.env.example
 .DS_Store
 Thumbs.db
+supabase/.temp/
+supabase/.branches/
 .agents
 WORKLOG.md
 docs/
