@@ -22,3 +22,4 @@ lerna-debug.log*
 Thumbs.db
 .agents
 WORKLOG.md
+docs/
