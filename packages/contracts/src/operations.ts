@@ -68,6 +68,7 @@ export const dashboardSchema = z.strictObject({
       created_at: z.string(),
       import_batch: z.string().nullable(),
       intake_details: z.record(z.string(), z.json()),
+      source_call_id: z.uuid().nullable().default(null),
     }),
   ),
   events: z.array(
@@ -76,6 +77,7 @@ export const dashboardSchema = z.strictObject({
       event_type: z.string(),
       description: z.string(),
       occurred_at: z.string(),
+      call_id: z.uuid().nullable().default(null),
     }),
   ),
   tools: z.array(
@@ -86,6 +88,7 @@ export const dashboardSchema = z.strictObject({
       error_code: z.string().nullable(),
       created_at: z.string(),
       source_ids: z.array(z.uuid()),
+      inquiry_id: z.uuid().nullable().default(null),
     }),
   ),
   evidence: z.array(
@@ -99,7 +102,27 @@ export const dashboardSchema = z.strictObject({
     }),
   ),
   knowledge: z.array(
-    z.object({ document_key: z.string(), version: z.string(), approval_status: z.string() }),
+    z.object({
+      document_key: z.string(),
+      version: z.string(),
+      approval_status: z.string(),
+      title: z.string().default(''),
+      source_path: z.string().default(''),
+      visibility: z.string().default(''),
+      approved_at: z.string().nullable().default(null),
+    }),
   ),
+  sources: z
+    .array(
+      z.object({
+        id: z.uuid(),
+        document_id: z.uuid(),
+        chunk_index: z.number().int(),
+        document_key: z.string(),
+        version: z.string(),
+        title: z.string(),
+      }),
+    )
+    .default([]),
 });
 export type Dashboard = z.infer<typeof dashboardSchema>;

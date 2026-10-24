@@ -36,6 +36,8 @@ const envSchema = z.object({
   BOLNA_API_KEY: optionalText,
   BOLNA_AGENT_ID: z.uuid().optional(),
   BOLNA_CALL_CHANNEL: z.enum(['browser', 'phone']).optional(),
+  BOLNA_WEB_CALL_ENABLED: z.enum(['true', 'false']).default('true'),
+  BOLNA_SESSION_RATE_LIMIT: z.coerce.number().int().min(1).max(10).default(3),
   BOLNA_TOOL_AUTH_TOKEN: optionalSecret,
   BOLNA_WEBHOOK_SECRET: optionalSecret,
   LLM_PROVIDER: optionalText,

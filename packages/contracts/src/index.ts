@@ -15,3 +15,4 @@ export type {
   ReadinessResponse,
 } from './health.js';
 export * from './operations.js';
+export * from './voice.js';

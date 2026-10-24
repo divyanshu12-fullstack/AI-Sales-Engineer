@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { dashboardSchema } from '@asterbyte/contracts';
 import type { Dashboard } from '@asterbyte/contracts';
-import { z } from 'zod';
+import { ApiRequestError, getActivity, getAuthConfig } from '../../lib/http.js';
 
 export const useOperations = () => {
   const [client, setClient] = useState<SupabaseClient | null>(null);
@@ -12,26 +11,33 @@ export const useOperations = () => {
   const [error, setError] = useState('');
   const [updated, setUpdated] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [access, setAccess] = useState<
+    'loading' | 'ready' | 'stale' | 'expired' | 'forbidden' | 'signed_out'
+  >('signed_out');
+  const [refreshVersion, setRefreshVersion] = useState(0);
+  const currentToken = useRef<string | null>(null);
   useEffect(() => {
     const abort = new AbortController();
     let dispose = () => {};
     void (async () => {
       try {
-        const response = await fetch('/api/auth/config', { signal: abort.signal });
-        if (!response.ok) throw new Error('Sign-in is not configured.');
-        const config = z
-          .object({ url: z.url(), publishableKey: z.string().min(1) })
-          .parse(await response.json());
+        const config = await getAuthConfig(abort.signal);
         if (abort.signal.aborted) return;
         // Public key only. Session stays in memory; never persist bearer/refresh tokens to localStorage.
         const auth = createClient(config.url, config.publishableKey, {
           auth: { persistSession: false, detectSessionInUrl: false },
         });
-        const { data: subscription } = auth.auth.onAuthStateChange((_event, session) => {
-          setToken(session?.access_token ?? null);
+        const { data: subscription } = auth.auth.onAuthStateChange((event, session) => {
+          const nextToken = session?.access_token ?? null;
+          const changed = currentToken.current !== nextToken;
+          currentToken.current = nextToken;
+          setToken(nextToken);
+          if (session && changed) setAccess('loading');
+          if (event === 'SIGNED_IN' && changed) setData(null);
           if (!session) {
             setData(null);
             setUpdated(null);
+            setAccess('signed_out');
           }
         });
         dispose = () => {
@@ -56,30 +62,26 @@ export const useOperations = () => {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const refresh = async () => {
       try {
-        const response = await fetch('/api/admin/activity', {
-          signal: controller.signal,
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if ([401, 403].includes(response.status)) {
+        const snapshot = await getActivity(token, controller.signal);
+        if (controller.signal.aborted) return;
+        setData(snapshot);
+        setUpdated(new Date().toISOString());
+        setAccess('ready');
+        setError('');
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        if (error instanceof ApiRequestError && [401, 403].includes(error.status)) {
           setData(null);
+          setAccess(error.status === 403 ? 'forbidden' : 'expired');
           setError(
-            response.status === 403
-              ? 'This account is not an active administrator. Ask the project owner to configure admin_profiles.'
+            error.status === 403
+              ? 'This account does not have administrator access. Contact the project owner.'
               : 'Your session expired. Sign out and sign in again.',
           );
           return;
         }
-        if (!response.ok) throw new Error('Dashboard fetch failed.');
-        const body = z.object({ data: dashboardSchema }).parse(await response.json());
-        if (controller.signal.aborted) return;
-        setData(body.data);
-        setUpdated(new Date().toLocaleTimeString());
-        setError('');
-      } catch {
-        if (!controller.signal.aborted)
-          setError(
-            'Refresh failed. Previously loaded records may be stale; retrying automatically.',
-          );
+        setAccess('stale');
+        setError('Refresh failed. Previously loaded records may be stale; retrying automatically.');
       }
       if (!controller.signal.aborted)
         timer = setTimeout(() => {
@@ -91,12 +93,13 @@ export const useOperations = () => {
       controller.abort();
       clearTimeout(timer);
     };
-  }, [token]);
+  }, [token, refreshVersion]);
 
   const signIn = async (email: string, password: string) => {
     if (!client) return;
     setBusy(true);
     setError('');
+    setAccess('signed_out');
     try {
       const result = await client.auth.signInWithPassword({ email, password });
       if (result.error)
@@ -109,13 +112,18 @@ export const useOperations = () => {
   };
   const signOut = async () => {
     if (!client) return;
-    const result = await client.auth.signOut({ scope: 'local' });
-    if (result.error) {
+    try {
+      const result = await client.auth.signOut({ scope: 'local' });
+      if (result.error) throw new Error('Sign-out unavailable');
+    } catch {
       setError('Sign-out failed; close this tab to clear the in-memory session.');
       return;
     }
+    currentToken.current = null;
     setToken(null);
     setData(null);
+    setUpdated(null);
+    setAccess('signed_out');
     setError('');
   };
   return {
@@ -127,5 +135,10 @@ export const useOperations = () => {
     busy,
     signIn,
     signOut,
+    access,
+    refresh: () => {
+      setAccess('loading');
+      setRefreshVersion((n) => n + 1);
+    },
   };
 };

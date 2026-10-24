@@ -178,6 +178,71 @@ describe('authenticated operational endpoints', () => {
     for (const secret of ['server-key', 'bolna-key', 'embedding-key'])
       expect(response.text).not.toContain(secret);
   });
+  it('adds stored tool relationships and source metadata only after the active-admin gate', async () => {
+    const passage = '00000000-0000-4000-8000-000000000003';
+    const document = '00000000-0000-4000-8000-000000000004';
+    const fetch = vi.fn((input: URL | string) => {
+      const url = new URL(input);
+      if (url.pathname === '/auth/v1/user') return Promise.resolve(json({ id: agent }));
+      if (url.pathname.endsWith('/admin_profiles')) return Promise.resolve(json([{ id: agent }]));
+      if (url.pathname.endsWith('/tool_executions'))
+        return Promise.resolve(
+          json([
+            {
+              id: execution,
+              tool_name: 'search_company_knowledge',
+              status: 'succeeded',
+              error_code: null,
+              created_at: '2026-10-24T10:00:00Z',
+              source_ids: [passage, passage],
+              inquiry_id: null,
+            },
+          ]),
+        );
+      if (url.pathname.endsWith('/knowledge_chunks'))
+        return Promise.resolve(
+          json([
+            {
+              id: passage,
+              document_id: document,
+              chunk_index: 0,
+              knowledge_documents: {
+                document_key: 'services-pricing',
+                version: '1.1',
+                title: 'Services and pricing',
+              },
+            },
+          ]),
+        );
+      return Promise.resolve(json([]));
+    });
+    vi.stubGlobal('fetch', fetch);
+    const result = await request(app())
+      .get('/api/admin/activity')
+      .set('Authorization', 'Bearer valid-admin')
+      .expect(200);
+    expect(result.body).toMatchObject({
+      data: {
+        tools: [{ id: execution, inquiry_id: null, source_ids: [passage, passage] }],
+        sources: [
+          {
+            id: passage,
+            document_id: document,
+            chunk_index: 0,
+            document_key: 'services-pricing',
+            version: '1.1',
+            title: 'Services and pricing',
+          },
+        ],
+      },
+    });
+    const sources = fetch.mock.calls
+      .map(([url]) => new URL(url))
+      .filter((url) => url.pathname.endsWith('/knowledge_chunks'));
+    expect(sources).toHaveLength(1);
+    expect(sources[0]?.searchParams.get('id')).toBe(`in.(${passage})`);
+    expect(sources[0]?.searchParams.get('limit')).toBe('160');
+  });
 });
 
 describe('provider input and knowledge safety', () => {

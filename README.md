@@ -3,16 +3,16 @@
 A voice-first consultancy and customer-support platform built incrementally with React, TypeScript,
 Express, Supabase and Bolna.
 
-**Current scope: knowledge retrieval and voice-operation integration.** Supabase holds the original
-113 records plus **43 real Qwen3-Embedding-8B chunks from seven approved documents**. The API provides
-authenticated public-knowledge search, confirmed prospect inquiries, authenticated call ingestion,
-and a protected activity dashboard at `/admin`.
+**Current scope: public consultancy website, embedded browser calling and operations workspace.**
+The responsive website presents approved company services/pricing, case studies and FAQs, with an
+unnamed AI voice representative. `/admin` provides Overview, Calls, Project inquiries, Tools & activity
+and Knowledge status using the existing protected API and in-memory administrator sign-in.
 
-The existing Bolna agent and prompts are unchanged. Live tools/webhooks are **not connected yet**:
-the user chose configuration templates without a tunnel/deployment, and no public HTTPS origin is set.
-Administrator sign-in is implemented, but no administrator account has been provisioned. See
-[integration setup](docs/voice-integration.md) for exact steps and limitations. Calendar/email,
-private customer support and browser calling from this website remain unavailable.
+The owner has successfully tested Bolna tools, summaries and administrator data since the earlier
+milestone. This iteration separately verified a real official-SDK browser connection, received audio,
+mute and end using a synthetic microphone. The working agent/prompt/voice/tools/webhook configuration
+was **not changed**. Human speech/audio quality and physical mobile devices remain untested. See
+[frontend setup and screenshots](docs/frontend.md). Calendar/email and private support remain out of scope.
 
 ## Read before changing code
 
@@ -45,7 +45,8 @@ Run from the workspace root:
 npm.cmd ci
 ```
 
-Configuration is optional for the local foundation. To customize it, create `.env` **only if it does
+Configuration is optional for rendering the site; calls and sign-in use the existing server credentials.
+To customize it, create `.env` **only if it does
 not already exist**, then edit it:
 
 ```powershell
@@ -74,15 +75,17 @@ Copy variable names from [.env.example](.env.example); never commit `.env`. The 
 `.env` explicitly in source and built modes. Existing process environment variables take precedence.
 Restart after configuration changes. Whitespace-only entries are treated as unset.
 
-| Variable           | Default / behavior                                                             |
-| ------------------ | ------------------------------------------------------------------------------ |
-| `NODE_ENV`         | `development`; also supports `test` and `production`                           |
-| `HOST`             | `127.0.0.1`; explicitly set `0.0.0.0` only when the host/container requires it |
-| `PORT`             | `3001`; also determines Vite's local API proxy port                            |
-| `WEB_ORIGIN`       | `http://127.0.0.1:5173`; exact permitted browser origin, no path               |
-| `LOG_LEVEL`        | `info`; JSON logs, with `silent` available for tests                           |
-| `RATE_LIMIT_MAX`   | `120` requests per IP per minute, excluding process liveness                   |
-| Provider variables | Optional; see [integration readiness](docs/integration-readiness.md)           |
+| Variable                   | Default / behavior                                                             |
+| -------------------------- | ------------------------------------------------------------------------------ |
+| `NODE_ENV`                 | `development`; also supports `test` and `production`                           |
+| `HOST`                     | `127.0.0.1`; explicitly set `0.0.0.0` only when the host/container requires it |
+| `PORT`                     | `3001`; also determines Vite's local API proxy port                            |
+| `WEB_ORIGIN`               | `http://127.0.0.1:5173`; exact permitted browser origin, no path               |
+| `LOG_LEVEL`                | `info`; JSON logs, with `silent` available for tests                           |
+| `RATE_LIMIT_MAX`           | `120` requests per IP per minute, excluding process liveness                   |
+| `BOLNA_WEB_CALL_ENABLED`   | `true`; set `false` to disable browser session minting                         |
+| `BOLNA_SESSION_RATE_LIMIT` | `3` session attempts per IP per 10 minutes; global process budget 20           |
+| Provider variables         | Optional; see [integration readiness](docs/integration-readiness.md)           |
 
 Invalid supplied values fail startup with **field names only**, never the secret values. Partial or
 missing integration configuration does not prevent the foundation from starting. No credentials are
@@ -94,10 +97,10 @@ port, update `WEB_ORIGIN` and pass the matching Vite CLI port. The proxy targets
 
 ## Health API
 
-| Endpoint                | Response                                                            | Meaning                                           |
-| ----------------------- | ------------------------------------------------------------------- | ------------------------------------------------- |
-| `GET /api/health/live`  | `200`, `{ "data": { "status": "ok", "service": "asterbyte-api" } }` | API process responds; no business-readiness claim |
-| `GET /api/health/ready` | `503`, structured configuration inventory                           | Complete voice workflow is not enabled/probed     |
+| Endpoint                | Response                                                            | Meaning                                             |
+| ----------------------- | ------------------------------------------------------------------- | --------------------------------------------------- |
+| `GET /api/health/live`  | `200`, `{ "data": { "status": "ok", "service": "asterbyte-api" } }` | API process responds; no business-readiness claim   |
+| `GET /api/health/ready` | `503`, legacy conservative configuration inventory                  | Not an active provider probe or browser call result |
 
 `503` on readiness is **intentional**, not a broken server. Use liveness for a process health probe;
 do not configure restart loops against the intentionally incomplete business-readiness endpoint.
@@ -123,6 +126,16 @@ npm.cmd run smoke:dev
 - `smoke:dev`: checks the source API and Vite development server with the same HTTP assertions.
 - Smoke tests do not place calls, send emails, access provider accounts or create business records.
 - UI tests use jsdom; smoke tests are HTTP-level, not real-browser or voice end-to-end tests.
+
+```powershell
+npm.cmd run review:frontend
+```
+
+This separate Playwright/installed-Chrome review checks public layouts (320–1920px), dashboard
+interactions, permission/failed-call UI and authorization-denial behavior. Populated dashboard
+screenshots use **controlled test data**, not private hosted records. Screenshots are in
+`artifacts/frontend/`. `-- --live-call` additionally makes one bounded, chargeable real provider call
+with a synthetic browser microphone; do not use it as a load test. See `docs/frontend.md`.
 
 Other commands: `npm.cmd run format`, `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd test`.
 
@@ -185,17 +198,18 @@ does not enable application persistence, authentication or change the foundation
 ## Structure and next milestone
 
 ```text
-apps/api/src/          App factory, server lifecycle, config, HTTP middleware and health module
-apps/web/src/          React foundation screen, isolated status fetcher and lifecycle hook
+apps/api/src/          Server lifecycle, protected operations, knowledge, ingestion and voice sessions
+apps/web/src/          Public consultancy site, official browser calling and protected operations UI
 packages/contracts/   Shared Zod request/response contracts and inferred types
-scripts/              Cross-platform local startup smoke test
+scripts/              Owned-process startup smoke tests and bounded real-browser UI review
 scripts/database/     Source validator, SQL emitter, isolated SQL tests and read-only REST check
 supabase/             Versioned migrations, explicit local config and metadata/access verification SQL
-docs/                 Architecture and external integration readiness
+docs/                 Architecture, integration setup, frontend verification and screenshot provenance
 WORKLOG.md            Chronological progress, verification and unresolved dependencies
 ```
 
 See [integration setup](docs/voice-integration.md) for connecting the prepared tools and webhook after
-choosing a public HTTPS URL, and provisioning one administrator after choosing the account. The next
-verification is a user-run real Bolna call. Private customer tools additionally require session-bound
-identity/access checks and remain out of this iteration.
+choosing a public HTTPS URL. Older setup steps are historical: the owner now reports that those platform
+connections and administrator data work. This iteration preserves them and adds the public website's
+short-lived session endpoint. See [frontend guide](docs/frontend.md) for current verification and remaining
+real-device limitations. Private customer tools still require session-bound identity/access checks.

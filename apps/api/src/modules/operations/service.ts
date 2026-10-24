@@ -129,21 +129,54 @@ export class Operations {
         'calls?select=id,code,status,record_source,started_at,summary,provider_execution_id&order=started_at.desc&limit=30',
       ),
       this.database.request(
-        'inquiries?select=id,code,title,requirements,stage,created_at,import_batch,intake_details&order=created_at.desc&limit=30',
+        'inquiries?select=id,code,title,requirements,stage,created_at,import_batch,intake_details,source_call_id&order=created_at.desc&limit=30',
       ),
       this.database.request(
-        'activity_events?select=id,event_type,description,occurred_at&order=occurred_at.desc&limit=40',
+        'activity_events?select=id,event_type,description,occurred_at,call_id&order=occurred_at.desc&limit=40',
       ),
       this.database.request(
-        'tool_executions?select=id,tool_name,status,error_code,created_at,source_ids&order=created_at.desc&limit=40',
+        'tool_executions?select=id,tool_name,status,error_code,created_at,source_ids,inquiry_id&order=created_at.desc&limit=40',
       ),
       this.database.request(
         'call_evidence?select=execution_id,provider_status,summary,contact_observations,conversation_duration,updated_at&order=updated_at.desc&limit=30',
       ),
       this.database.request(
-        'knowledge_documents?select=document_key,version,approval_status&order=document_key',
+        'knowledge_documents?select=document_key,version,approval_status,title,source_path,visibility,approved_at&order=document_key',
       ),
     ]);
-    return dashboardSchema.parse({ calls, inquiries, events, tools, evidence, knowledge });
+    const snapshot = dashboardSchema.parse({
+      calls,
+      inquiries,
+      events,
+      tools,
+      evidence,
+      knowledge,
+    });
+    const sourceIds = [...new Set(snapshot.tools.flatMap((tool) => tool.source_ids))].slice(0, 160);
+    if (sourceIds.length) {
+      const sources = z
+        .array(
+          z.object({
+            id: z.uuid(),
+            document_id: z.uuid(),
+            chunk_index: z.number().int(),
+            knowledge_documents: z.object({
+              document_key: z.string(),
+              version: z.string(),
+              title: z.string(),
+            }),
+          }),
+        )
+        .parse(
+          await this.database.request(
+            `knowledge_chunks?select=id,document_id,chunk_index,knowledge_documents(document_key,version,title)&id=in.(${sourceIds.join(',')})&limit=160`,
+          ),
+        );
+      snapshot.sources = sources.map(({ knowledge_documents: document, ...chunk }) => ({
+        ...chunk,
+        ...document,
+      }));
+    }
+    return snapshot;
   }
 }

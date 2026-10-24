@@ -66,6 +66,7 @@ export const apiErrorCodeSchema = z.enum([
   'INTEGRATION_UNAVAILABLE',
   'UPSTREAM_ERROR',
   'CONFLICT',
+  'CALL_CAPACITY',
 ]);
 
 export type ApiErrorCode = z.infer<typeof apiErrorCodeSchema>;

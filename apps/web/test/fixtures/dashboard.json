@@ -1,0 +1,202 @@
+{
+  "calls": [
+    {
+      "id": "10000000-0000-4000-8000-000000000001",
+      "code": "CALL-BROWSER-EXAMPLE",
+      "status": "completed",
+      "record_source": "provider",
+      "started_at": "2026-10-24T09:20:00Z",
+      "summary": "Caller discussed an inventory and order workflow for a growing business. Requirements and next steps were collected.",
+      "provider_execution_id": "20000000-0000-4000-8000-000000000001"
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000002",
+      "code": "CALL-IMPORTED-EXAMPLE",
+      "status": "completed",
+      "record_source": "imported_history",
+      "started_at": "2026-10-23T10:15:00Z",
+      "summary": "Imported consultation about a business website and content handover.",
+      "provider_execution_id": null
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000003",
+      "code": "CALL-FAILED-EXAMPLE",
+      "status": "failed",
+      "record_source": "provider",
+      "started_at": "2026-10-24T08:10:00Z",
+      "summary": "No completed conversation.",
+      "provider_execution_id": "20000000-0000-4000-8000-000000000003"
+    }
+  ],
+  "inquiries": [
+    {
+      "id": "30000000-0000-4000-8000-000000000001",
+      "code": "INQ-EXAMPLE-01",
+      "title": "Inventory & order workflow",
+      "requirements": "A growing business needs a shared view of stock, incoming orders and order ownership. First release should support basic roles and operational reporting.",
+      "stage": "new",
+      "created_at": "2026-10-24T09:22:00Z",
+      "import_batch": null,
+      "source_call_id": null,
+      "intake_details": {
+        "customer_name": "Example caller",
+        "email": "caller@example.invalid",
+        "phone": "",
+        "organization": "Example business",
+        "budget": "To be discussed",
+        "timeline": "A phased first release",
+        "identity_status": "unverified",
+        "confirmation_source": "agent_reported_caller_confirmation",
+        "call_link_status": "unlinked"
+      }
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000002",
+      "code": "INQ-IMPORTED-02",
+      "title": "Content-managed business website",
+      "requirements": "An editable business website with a clear service catalog and content handover.",
+      "stage": "qualified",
+      "created_at": "2026-10-23T10:25:00Z",
+      "import_batch": "asterbyte-initial-v1",
+      "source_call_id": "10000000-0000-4000-8000-000000000002",
+      "intake_details": {}
+    }
+  ],
+  "tools": [
+    {
+      "id": "40000000-0000-4000-8000-000000000001",
+      "tool_name": "search_company_knowledge",
+      "status": "succeeded",
+      "error_code": null,
+      "created_at": "2026-10-24T09:21:00Z",
+      "source_ids": ["50000000-0000-4000-8000-000000000001"],
+      "inquiry_id": null
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000002",
+      "tool_name": "create_project_inquiry",
+      "status": "succeeded",
+      "error_code": null,
+      "created_at": "2026-10-24T09:22:00Z",
+      "source_ids": [],
+      "inquiry_id": "30000000-0000-4000-8000-000000000001"
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000003",
+      "tool_name": "search_company_knowledge",
+      "status": "failed",
+      "error_code": "UPSTREAM_ERROR",
+      "created_at": "2026-10-24T08:09:00Z",
+      "source_ids": [],
+      "inquiry_id": null
+    }
+  ],
+  "events": [
+    {
+      "id": "60000000-0000-4000-8000-000000000001",
+      "event_type": "inquiry_created",
+      "description": "Confirmed project inquiry recorded for human review.",
+      "occurred_at": "2026-10-24T09:22:00Z",
+      "call_id": null
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000002",
+      "event_type": "note_recorded",
+      "description": "Completed voice conversation received with summary and extraction observations.",
+      "occurred_at": "2026-10-24T09:23:00Z",
+      "call_id": "10000000-0000-4000-8000-000000000001"
+    },
+    {
+      "id": "60000000-0000-4000-8000-000000000003",
+      "event_type": "history_imported",
+      "description": "Initial consultation history imported.",
+      "occurred_at": "2026-10-23T10:25:00Z",
+      "call_id": "10000000-0000-4000-8000-000000000002"
+    }
+  ],
+  "evidence": [
+    {
+      "execution_id": "20000000-0000-4000-8000-000000000001",
+      "provider_status": "completed",
+      "summary": "A discussion of inventory and order workflows.",
+      "contact_observations": { "name": "Example caller", "email": "caller@example.invalid" },
+      "conversation_duration": 143,
+      "updated_at": "2026-10-24T09:23:00Z"
+    }
+  ],
+  "knowledge": [
+    {
+      "document_key": "company-overview",
+      "version": "1.1",
+      "title": "About AsterByte Solutions",
+      "approval_status": "approved",
+      "visibility": "public",
+      "approved_at": "2026-10-23T20:52:00Z",
+      "source_path": "docs/knowledge-base/company-overview.md"
+    },
+    {
+      "document_key": "services-pricing",
+      "version": "1.1",
+      "title": "Services, pricing and delivery",
+      "approval_status": "approved",
+      "visibility": "public",
+      "approved_at": "2026-10-23T20:52:00Z",
+      "source_path": "docs/knowledge-base/services-pricing.md"
+    },
+    {
+      "document_key": "team-expertise",
+      "version": "1.1",
+      "title": "Teams and expertise",
+      "approval_status": "approved",
+      "visibility": "public",
+      "approved_at": "2026-10-23T20:52:00Z",
+      "source_path": "docs/knowledge-base/team-expertise.md"
+    },
+    {
+      "document_key": "case-studies",
+      "version": "1.1",
+      "title": "Client case studies",
+      "approval_status": "approved",
+      "visibility": "public",
+      "approved_at": "2026-10-23T20:52:00Z",
+      "source_path": "docs/knowledge-base/case-studies.md"
+    },
+    {
+      "document_key": "clinic-system-guide",
+      "version": "1.1",
+      "title": "ClinicFlow support guide",
+      "approval_status": "approved",
+      "visibility": "public",
+      "approved_at": "2026-10-23T20:52:00Z",
+      "source_path": "docs/knowledge-base/clinic-system-guide.md"
+    },
+    {
+      "document_key": "sales-crm-guide",
+      "version": "1.1",
+      "title": "LeadBridge support guide",
+      "approval_status": "approved",
+      "visibility": "public",
+      "approved_at": "2026-10-23T20:52:00Z",
+      "source_path": "docs/knowledge-base/sales-crm-guide.md"
+    },
+    {
+      "document_key": "support-policies",
+      "version": "1.1",
+      "title": "Support policies",
+      "approval_status": "approved",
+      "visibility": "public",
+      "approved_at": "2026-10-23T20:52:00Z",
+      "source_path": "docs/knowledge-base/support-policies.md"
+    }
+  ],
+  "sources": [
+    {
+      "id": "50000000-0000-4000-8000-000000000001",
+      "document_id": "70000000-0000-4000-8000-000000000001",
+      "chunk_index": 0,
+      "document_key": "services-pricing",
+      "version": "1.1",
+      "title": "Services, pricing and delivery"
+    }
+  ]
+}
