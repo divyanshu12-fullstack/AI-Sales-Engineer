@@ -1,5 +1,10 @@
 import type { IntegrationId } from '@asterbyte/contracts';
+import { lazy, Suspense } from 'react';
 import { useFoundationStatus } from './features/foundation/use-foundation-status.js';
+const Dashboard = lazy(async () => {
+  const module = await import('./features/operations/Dashboard.js');
+  return { default: module.Dashboard };
+});
 
 const integrationNames: Record<IntegrationId, string> = {
   supabase: 'Supabase runtime API & authentication',
@@ -11,7 +16,7 @@ const integrationNames: Record<IntegrationId, string> = {
   public_callbacks: 'Public HTTPS callbacks',
 };
 
-export const App = () => {
+export const FoundationApp = () => {
   const { state, refresh } = useFoundationStatus();
 
   return (
@@ -21,8 +26,11 @@ export const App = () => {
           <a className="text-xl font-bold tracking-tight" href="/">
             AsterByte<span className="font-normal text-slate-500"> Solutions</span>
           </a>
+          <a className="text-sm font-medium text-teal-800 underline" href="/admin">
+            Operations dashboard
+          </a>
           <span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-medium text-amber-900">
-            Database foundation · Live features unavailable
+            Integration build · Live calling not connected
           </span>
         </div>
       </header>
@@ -41,9 +49,9 @@ export const App = () => {
             No simulated capabilities.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-600">
-            The React application and Express API are the first building blocks. Voice
-            consultations, customer support and persistent memory will be added in separate,
-            testable milestones.
+            Approved company knowledge and incoming business records have backend integrations. The
+            operations dashboard requires administrator sign-in. Live Bolna callbacks still need a
+            configured public HTTPS endpoint.
           </p>
         </section>
 
@@ -70,8 +78,8 @@ export const App = () => {
             )}
             {state.status === 'loaded' && (
               <p role="status" className="mt-4 leading-relaxed text-slate-600">
-                The API process is healthy. Business integrations are unavailable; configuration
-                alone does not establish connectivity or enable a feature.
+                The API process is healthy. Full voice-workflow readiness is not established;
+                configuration alone does not verify live connectivity.
               </p>
             )}
             <button
@@ -104,8 +112,8 @@ export const App = () => {
               Explicitly unavailable until verified
             </h2>
             <p className="mt-3 leading-relaxed text-slate-600">
-              This list reports real backend configuration state, not fabricated business activity.
-              Provider adapters and account checks are not implemented yet.
+              This conservative inventory reports backend configuration, not provider probes. See
+              the protected operations dashboard for actual stored records.
             </p>
             {state.status === 'loaded' ? (
               <ul className="mt-6 divide-y divide-stone-200">
@@ -141,3 +149,12 @@ export const App = () => {
     </div>
   );
 };
+
+export const App = () =>
+  window.location.pathname === '/admin' ? (
+    <Suspense fallback={<p role="status">Loading administrator sign-in…</p>}>
+      <Dashboard />
+    </Suspense>
+  ) : (
+    <FoundationApp />
+  );

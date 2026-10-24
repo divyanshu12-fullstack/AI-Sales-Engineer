@@ -7,7 +7,7 @@ try {
   const pack = await readPack();
   if (command === 'validate') {
     console.log(
-      'PASS: 20 table contracts, 113 records, UUID/unique/FK/scope checks, safe import states and seven exact Markdown snapshots/hashes. knowledge_chunks deferred.',
+      'PASS: original import manifest: 20 table contracts, 113 records, UUID/unique/FK/scope checks and seven exact Markdown hashes. This validates the frozen source pack, not current hosted schema/approval/index state.',
     );
   } else if (command === 'seed-sql') {
     const sql = buildImportSql(pack.data);
@@ -35,7 +35,16 @@ try {
     );
   } else if (command === 'summary') {
     console.log(
-      JSON.stringify({ tables: tableNames, records: 113, deferred: ['knowledge_chunks'] }, null, 2),
+      JSON.stringify(
+        {
+          scope: 'original_import_manifest',
+          tables: tableNames,
+          records: 113,
+          originallyDeferred: ['knowledge_chunks'],
+        },
+        null,
+        2,
+      ),
     );
   } else {
     throw new Error('Use validate, seed-sql, verify-sql or summary.');

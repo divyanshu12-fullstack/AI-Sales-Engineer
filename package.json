@@ -13,7 +13,8 @@
   },
   "packageManager": "npm@12.0.1",
   "allowScripts": {
-    "esbuild": false
+    "esbuild": false,
+    "cloudflared@0.7.3": true
   },
   "scripts": {
     "dev": "npm run build --workspace @asterbyte/contracts && concurrently --kill-others --names contracts,api,web \"npm run dev --workspace @asterbyte/contracts\" \"npm run dev --workspace @asterbyte/api\" \"npm run dev --workspace @asterbyte/web\"",
@@ -29,12 +30,17 @@
     "db:seed:sql": "tsx scripts/database/cli.ts seed-sql",
     "db:verify:sql": "tsx scripts/database/cli.ts verify-sql",
     "db:verify:rest": "tsx scripts/database/verify-rest.ts",
+    "knowledge:ingest": "tsx scripts/database/knowledge.ts",
+    "knowledge:verify": "tsx scripts/database/verify-runtime.ts",
+    "bolna:config": "tsx scripts/database/bolna-config.ts",
+    "integrations:secrets": "tsx scripts/database/prepare-secrets.ts",
     "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build",
     "smoke": "npm run build && node scripts/smoke.mjs",
     "smoke:dev": "npm run build --workspace @asterbyte/contracts && node scripts/smoke.mjs --dev"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.11",
+    "@electric-sql/pglite-pgvector": "0.0.12",
     "@eslint/js": "10.0.1",
     "@types/node": "24.19.2",
     "concurrently": "10.0.6",
@@ -49,5 +55,8 @@
     "typescript-eslint": "8.72.0",
     "vitest": "5.0.5",
     "zod": "4.6.7"
+  },
+  "dependencies": {
+    "cloudflared": "0.7.3"
   }
 }

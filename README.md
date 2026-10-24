@@ -3,13 +3,16 @@
 A voice-first consultancy and customer-support platform built incrementally with React, TypeScript,
 Express, Supabase and Bolna.
 
-**Current scope: milestone 2, database foundation and initial records.** The designated Supabase
-development database has 19 secured tables and 113 imported records. Versioned migrations, repeatable
-loading and verification are documented in [database setup](docs/database-setup.md).
+**Current scope: knowledge retrieval and voice-operation integration.** Supabase holds the original
+113 records plus **43 real Qwen3-Embedding-8B chunks from seven approved documents**. The API provides
+authenticated public-knowledge search, confirmed prospect inquiries, authenticated call ingestion,
+and a protected activity dashboard at `/admin`.
 
-The React/Express application still exposes foundation health reporting, not business operations.
-Administrator login, runtime customer APIs, calling, embeddings/RAG, booking and email delivery are
-not implemented. A working developer MCP connection or database import does not enable the live agent.
+The existing Bolna agent and prompts are unchanged. Live tools/webhooks are **not connected yet**:
+the user chose configuration templates without a tunnel/deployment, and no public HTTPS origin is set.
+Administrator sign-in is implemented, but no administrator account has been provisioned. See
+[integration setup](docs/voice-integration.md) for exact steps and limitations. Calendar/email,
+private customer support and browser calling from this website remain unavailable.
 
 ## Read before changing code
 
@@ -56,6 +59,7 @@ npm.cmd run dev
 ```
 
 - React: <http://127.0.0.1:5173>
+- Protected operations dashboard: <http://127.0.0.1:5173/admin>
 - Express: <http://127.0.0.1:3001>
 - The contracts package compiles before startup and then watches for changes.
 - Vite forwards `/api` requests to Express; browser code uses relative URLs and contains no keys.
@@ -93,13 +97,14 @@ port, update `WEB_ORIGIN` and pass the matching Vite CLI port. The proxy targets
 | Endpoint                | Response                                                            | Meaning                                           |
 | ----------------------- | ------------------------------------------------------------------- | ------------------------------------------------- |
 | `GET /api/health/live`  | `200`, `{ "data": { "status": "ok", "service": "asterbyte-api" } }` | API process responds; no business-readiness claim |
-| `GET /api/health/ready` | `503`, structured integration report                                | Runtime business integrations are not implemented |
+| `GET /api/health/ready` | `503`, structured configuration inventory                           | Complete voice workflow is not enabled/probed     |
 
 `503` on readiness is **intentional**, not a broken server. Use liveness for a process health probe;
 do not configure restart loops against the intentionally incomplete business-readiness endpoint.
 
 Readiness lists configuration presence, missing variable **names**, and `verification: not_checked`.
-This runtime-adapter inventory is separate from the verified database setup in `docs/database-setup.md`.
+This conservative configuration inventory is separate from real retrieval verification and stored
+activity. It does not dynamically probe providers or claim live voice readiness.
 It never returns keys, email addresses, project URLs or token values. Its shared runtime schema rejects
 fabricated available integrations. API responses have `Cache-Control: no-store` and a generated
 `X-Request-ID`. Errors use `{ "error": { "code", "message", "requestId" } }`.
@@ -133,6 +138,21 @@ The last command performs only GET requests using local server configuration. It
 scope, denied anonymous access, the company record and seven hosted source hashes without logging keys.
 `npm.cmd run db:seed:sql -- --output supabase/.temp/initial-import.sql` generates a validated UTF-8
 import statement; it does **not** execute it. See the database guide before applying migrations/imports.
+The original importer is frozen developer tooling: it intentionally rejects the later schema/review
+state rather than overwriting approved records. Do not rerun it on the current database.
+
+Current integration commands:
+
+```powershell
+npm.cmd run knowledge:ingest
+npm.cmd run knowledge:verify
+npm.cmd run bolna:config
+```
+
+`knowledge:ingest` validates and resumes approved public chunks; missing chunks use the paid embedding
+API. `knowledge:verify` makes three real authenticated local-backend searches through OpenRouter and
+Supabase and records genuine backend tool checks (not Bolna calls). `bolna:config` writes placeholder-only
+JSON under Git-ignored `supabase/.temp/`, without modifying the agent. Never commit `--private` exports.
 
 For a built API:
 
@@ -175,8 +195,7 @@ docs/                 Architecture and external integration readiness
 WORKLOG.md            Chronological progress, verification and unresolved dependencies
 ```
 
-See [architecture](docs/architecture.md) for boundaries and [integration readiness](docs/integration-readiness.md)
-for provider prerequisites and Bolna evidence. Before expanding retrieval, the next integration
-milestone should prove one authenticated backend knowledge-search tool works in a real Bolna call.
-That work needs an approved knowledge version and a selected embedding model/dimension first; it is
-not implemented here. Private customer tools additionally require session-bound identity/access checks.
+See [integration setup](docs/voice-integration.md) for connecting the prepared tools and webhook after
+choosing a public HTTPS URL, and provisioning one administrator after choosing the account. The next
+verification is a user-run real Bolna call. Private customer tools additionally require session-bound
+identity/access checks and remain out of this iteration.

@@ -78,7 +78,7 @@ const main = async (): Promise<void> => {
         document_key: z.string(),
         version: z.string(),
         content_sha256: z.string(),
-        approval_status: z.literal('draft'),
+        approval_status: z.enum(['draft', 'approved', 'retired']),
       }),
     )
     .length(7)
@@ -96,7 +96,7 @@ const main = async (): Promise<void> => {
     }
   }
   console.log(
-    `PASS: configured project matches MCP; anonymous REST read denied (${anonymous.status}/42501); server-key company read succeeded; seven hosted draft hashes match current Markdown. Only GET requests performed.`,
+    `PASS: configured project matches MCP; anonymous REST read denied (${anonymous.status}/42501); server-key company read succeeded; seven hosted snapshot hashes match current Markdown. Only GET requests performed.`,
   );
 };
 

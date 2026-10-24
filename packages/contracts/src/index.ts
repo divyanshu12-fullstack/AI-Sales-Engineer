@@ -14,3 +14,4 @@ export type {
   LivenessResponse,
   ReadinessResponse,
 } from './health.js';
+export * from './operations.js';

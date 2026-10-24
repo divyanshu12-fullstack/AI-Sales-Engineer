@@ -60,6 +60,12 @@ export const apiErrorCodeSchema = z.enum([
   'ORIGIN_NOT_ALLOWED',
   'RATE_LIMITED',
   'INTERNAL_ERROR',
+  'INVALID_INPUT',
+  'UNAUTHORIZED',
+  'FORBIDDEN',
+  'INTEGRATION_UNAVAILABLE',
+  'UPSTREAM_ERROR',
+  'CONFLICT',
 ]);
 
 export type ApiErrorCode = z.infer<typeof apiErrorCodeSchema>;

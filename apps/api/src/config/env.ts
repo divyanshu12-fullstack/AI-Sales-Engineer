@@ -35,6 +35,7 @@ const envSchema = z.object({
   SUPABASE_SECRET_KEY: optionalText,
   BOLNA_API_KEY: optionalText,
   BOLNA_AGENT_ID: z.uuid().optional(),
+  BOLNA_CALL_CHANNEL: z.enum(['browser', 'phone']).optional(),
   BOLNA_TOOL_AUTH_TOKEN: optionalSecret,
   BOLNA_WEBHOOK_SECRET: optionalSecret,
   LLM_PROVIDER: optionalText,

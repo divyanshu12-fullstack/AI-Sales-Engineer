@@ -55,7 +55,14 @@ describe('reviewed PostgreSQL migrations and initial import (PGlite)', () => {
       begin;
     `);
     const folder = resolve(workspaceRoot, 'supabase/migrations');
-    for (const name of (await readdir(folder)).filter((file) => file.endsWith('.sql')).sort()) {
+    // Milestone-2 importer contract is deliberately frozen; later runtime migrations are tested separately.
+    for (const name of (await readdir(folder))
+      .filter((file) =>
+        ['20261023062407_business_foundation.sql', '20261023062414_initial_import.sql'].includes(
+          file,
+        ),
+      )
+      .sort()) {
       await db.exec(await readFile(resolve(folder, name), 'utf8'));
     }
     await db.exec('commit');
