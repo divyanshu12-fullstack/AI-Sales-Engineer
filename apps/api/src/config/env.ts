@@ -51,6 +51,7 @@ const envSchema = z.object({
   CALCOM_EVENT_TYPE_ID: z.coerce.number().int().positive().optional(),
   RESEND_API_KEY: optionalText,
   RESEND_FROM_EMAIL: z.email().optional(),
+  SUPPORT_EMAIL_WORKER_ENABLED: z.enum(['true', 'false']).default('true'),
   PUBLIC_API_BASE_URL: originSchema
     .refine((value) => value.startsWith('https://'), 'Public callbacks require HTTPS.')
     .optional(),

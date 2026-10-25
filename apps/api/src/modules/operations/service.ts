@@ -6,6 +6,7 @@ import {
   knowledgeQuestionSchema,
   knowledgeResultSchema,
   passageSchema,
+  supportDashboardSchema,
 } from '@asterbyte/contracts';
 import { z } from 'zod';
 import type { Logger } from 'pino';
@@ -124,9 +125,20 @@ export class Operations {
   }
 
   async dashboard() {
-    const [calls, inquiries, events, tools, evidence, knowledge] = await Promise.all([
+    const [
+      calls,
+      inquiries,
+      events,
+      tools,
+      evidence,
+      knowledge,
+      tickets,
+      emails,
+      meetings,
+      chunkRows,
+    ] = await Promise.all([
       this.database.request(
-        'calls?select=id,code,status,record_source,started_at,summary,provider_execution_id&order=started_at.desc&limit=30',
+        'calls?select=id,code,status,record_source,started_at,summary,provider_execution_id,channel,direction,call_evidence(conversation_duration)&order=started_at.desc&limit=30',
       ),
       this.database.request(
         'inquiries?select=id,code,title,requirements,stage,created_at,import_batch,intake_details,source_call_id&order=created_at.desc&limit=30',
@@ -135,22 +147,52 @@ export class Operations {
         'activity_events?select=id,event_type,description,occurred_at,call_id&order=occurred_at.desc&limit=40',
       ),
       this.database.request(
-        'tool_executions?select=id,tool_name,status,error_code,created_at,source_ids,inquiry_id&order=created_at.desc&limit=40',
+        'tool_executions?select=id,tool_name,status,error_code,created_at,source_ids,inquiry_id,ticket_id&order=created_at.desc&limit=40',
       ),
       this.database.request(
         'call_evidence?select=execution_id,provider_status,summary,contact_observations,conversation_duration,updated_at&order=updated_at.desc&limit=30',
       ),
       this.database.request(
-        'knowledge_documents?select=document_key,version,approval_status,title,source_path,visibility,approved_at&order=document_key',
+        'knowledge_documents?select=id,document_key,version,approval_status,title,source_path,visibility,approved_at&order=document_key',
       ),
+      this.database.request('support_ticket_dashboard?select=*&order=reported_at.desc&limit=40'),
+      this.database.request(
+        'integration_jobs?select=id,status,attempts,last_error_code,provider_message_id,created_at,payload&job_type=eq.send_email&dedupe_key=like.support:*&order=created_at.desc&limit=80',
+      ),
+      this.database.request(
+        `meetings?select=id,code,title,requested_start_at,duration_minutes,timezone,status,provider,provider_event_id,inquiry_id,project_id,employees(full_name)&status=in.(requested,confirmed)&requested_start_at=gte.${encodeURIComponent(new Date().toISOString())}&order=requested_start_at&limit=30`,
+      ),
+      this.database.request('knowledge_chunks?select=document_id&limit=1000'),
     ]);
+    const callRows = z
+      .array(
+        z
+          .object({
+            call_evidence: z
+              .object({ conversation_duration: z.number().nonnegative() })
+              .nullable()
+              .optional(),
+          })
+          .passthrough(),
+      )
+      .parse(calls);
+    const chunks = z.array(z.object({ document_id: z.uuid() })).parse(chunkRows);
+    const documents = z.array(z.object({ id: z.uuid().optional() }).passthrough()).parse(knowledge);
     const snapshot = dashboardSchema.parse({
-      calls,
+      calls: callRows.map(({ call_evidence, ...call }) => ({
+        ...call,
+        duration_seconds: call_evidence?.conversation_duration ?? null,
+      })),
       inquiries,
       events,
       tools,
       evidence,
-      knowledge,
+      knowledge: documents.map((doc) => ({
+        ...doc,
+        indexed_passages: chunks.filter((chunk) => chunk.document_id === doc.id).length,
+      })),
+      meetings,
+      support: supportDashboardSchema.parse({ tickets, emails }),
     });
     const sourceIds = [...new Set(snapshot.tools.flatMap((tool) => tool.source_ids))].slice(0, 160);
     if (sourceIds.length) {

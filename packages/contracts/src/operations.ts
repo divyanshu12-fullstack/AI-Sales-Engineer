@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { supportDashboardSchema } from './support.js';
 
 export const knowledgeQuestionSchema = z.strictObject({
   question: z.string().trim().min(3).max(1500),
@@ -47,6 +48,25 @@ export const inquiryResultSchema = z.strictObject({
   identity_status: z.literal('unverified'),
 });
 export const dashboardSchema = z.strictObject({
+  meetings: z
+    .array(
+      z.object({
+        id: z.uuid(),
+        code: z.string(),
+        title: z.string(),
+        requested_start_at: z.string(),
+        duration_minutes: z.number(),
+        timezone: z.string(),
+        status: z.string(),
+        provider: z.string().nullable(),
+        provider_event_id: z.string().nullable(),
+        inquiry_id: z.uuid().nullable(),
+        project_id: z.uuid().nullable(),
+        employees: z.object({ full_name: z.string() }).nullable().default(null),
+      }),
+    )
+    .default([]),
+  support: supportDashboardSchema.default({ tickets: [], emails: [] }),
   calls: z.array(
     z.object({
       id: z.uuid(),
@@ -56,6 +76,9 @@ export const dashboardSchema = z.strictObject({
       started_at: z.string(),
       summary: z.string(),
       provider_execution_id: z.string().nullable(),
+      channel: z.string().nullable().default(null),
+      direction: z.string().nullable().default(null),
+      duration_seconds: z.number().nonnegative().nullable().default(null),
     }),
   ),
   inquiries: z.array(
@@ -89,6 +112,7 @@ export const dashboardSchema = z.strictObject({
       created_at: z.string(),
       source_ids: z.array(z.uuid()),
       inquiry_id: z.uuid().nullable().default(null),
+      ticket_id: z.uuid().nullable().default(null),
     }),
   ),
   evidence: z.array(
@@ -104,12 +128,14 @@ export const dashboardSchema = z.strictObject({
   knowledge: z.array(
     z.object({
       document_key: z.string(),
+      id: z.uuid().optional(),
       version: z.string(),
       approval_status: z.string(),
       title: z.string().default(''),
       source_path: z.string().default(''),
       visibility: z.string().default(''),
       approved_at: z.string().nullable().default(null),
+      indexed_passages: z.number().int().nonnegative().default(0),
     }),
   ),
   sources: z
@@ -126,3 +152,12 @@ export const dashboardSchema = z.strictObject({
     .default([]),
 });
 export type Dashboard = z.infer<typeof dashboardSchema>;
+export const knowledgeDocumentSchema = z.object({
+  id: z.uuid(),
+  title: z.string(),
+  version: z.string(),
+  document_key: z.string(),
+  content_markdown: z.string(),
+  content_sha256: z.string(),
+});
+export type KnowledgeDocument = z.infer<typeof knowledgeDocumentSchema>;

@@ -6,13 +6,23 @@ Express, Supabase and Bolna.
 **Current scope: public consultancy website, embedded browser calling and operations workspace.**
 The responsive website presents approved company services/pricing, case studies and FAQs, with an
 unnamed AI voice representative. `/admin` provides Overview, Calls, Project inquiries, Tools & activity
-and Knowledge status using the existing protected API and in-memory administrator sign-in.
+and Knowledge status, plus Support tickets and Meetings, using the existing protected API and in-memory
+administrator sign-in. Overview highlights recent calls, potential leads, pending tickets and confirmed
+upcoming appointments. Requested meetings are shown separately, not represented as bookings.
 
-The owner has successfully tested Bolna tools, summaries and administrator data since the earlier
-milestone. This iteration separately verified a real official-SDK browser connection, received audio,
-mute and end using a synthetic microphone. The working agent/prompt/voice/tools/webhook configuration
-was **not changed**. Human speech/audio quality and physical mobile devices remain untested. See
-[frontend setup and screenshots](docs/frontend.md). Calendar/email and private support remain out of scope.
+The support iteration adds **Support tickets**, four-digit demo project/customer codes, real ticket
+intake and administrator resolution with queued Resend notifications. See [support setup](docs/support-workflow.md)
+and the owner-run [demo customer SQL](supabase/examples/create_demo_support_customer.sql). Short codes are
+explicitly limited to fictional-data intake, not production customer identity verification.
+
+The owner has successfully tested support tickets and acknowledgement/resolution emails. The October 26
+update improves post-ticket closing, suppresses unsolicited ticket references, restyles transactional
+emails and simplifies `/admin`. The same agent's webhook and all four tool URLs now use
+`https://alexander-tenant-impressed-utilization.trycloudflare.com`; voice, model, summaries, extractions
+and bearer credentials are preserved. A synthetic closing-only call ended remotely; the audible single
+goodbye and contextual post-ticket flow still need human acceptance. See [frontend setup and previews](docs/frontend.md)
+and [support setup](docs/support-workflow.md). Calendar booking/new-customer automation remain deferred;
+Meetings only reads existing future records.
 
 ## Read before changing code
 
@@ -210,6 +220,7 @@ WORKLOG.md            Chronological progress, verification and unresolved depend
 
 See [integration setup](docs/voice-integration.md) for connecting the prepared tools and webhook after
 choosing a public HTTPS URL. Older setup steps are historical: the owner now reports that those platform
-connections and administrator data work. This iteration preserves them and adds the public website's
-short-lived session endpoint. See [frontend guide](docs/frontend.md) for current verification and remaining
-real-device limitations. Private customer tools still require session-bound identity/access checks.
+connections and administrator data work. The current agent-management script preserves their credentials
+and updates callback origins when the tunnel changes. See [frontend guide](docs/frontend.md) for current
+verification and remaining real-device limitations. Private customer tools still require session-bound
+identity/access checks; the support demo's short-code grants allow issue intake only.

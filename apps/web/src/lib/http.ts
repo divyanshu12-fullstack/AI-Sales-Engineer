@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { browserSessionSchema, dashboardSchema } from '@asterbyte/contracts';
+import {
+  browserSessionSchema,
+  dashboardSchema,
+  knowledgeDocumentSchema,
+} from '@asterbyte/contracts';
 
 export class ApiRequestError extends Error {
   constructor(readonly status: number) {
@@ -43,4 +47,29 @@ export const mintBrowserSession = async (signal: AbortSignal) => {
       ...(credential === undefined ? {} : { credential }),
     })),
   };
+};
+export const updateSupportTicket = async (
+  token: string,
+  id: string,
+  status: string,
+  resolution: string,
+) => {
+  await requestJson(`/api/admin/support/tickets/${id}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status, resolution }),
+  });
+};
+export const retrySupportEmail = async (token: string, id: string) => {
+  await requestJson(`/api/admin/support/emails/${id}/retry`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+export const getKnowledgeDocument = async (token: string, id: string, signal: AbortSignal) => {
+  const body = await requestJson(`/api/admin/knowledge/${id}`, {
+    signal,
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return z.object({ data: knowledgeDocumentSchema }).parse(body).data;
 };

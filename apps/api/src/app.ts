@@ -9,6 +9,7 @@ import { createRequestContext } from './http/request-context.js';
 import { getLiveness, getReadiness } from './modules/health/service.js';
 import { operationsRouter } from './modules/operations/router.js';
 import { voiceRouter } from './modules/voice/router.js';
+import { supportRouter } from './modules/support/router.js';
 
 export const createApp = (config: Env, logger: Logger) => {
   const app = express();
@@ -59,6 +60,7 @@ export const createApp = (config: Env, logger: Logger) => {
   });
   app.use('/api', operationsRouter(config, logger));
   app.use('/api/voice', voiceRouter(config));
+  app.use('/api', supportRouter(config, logger));
 
   app.get('/api/health/ready', (_request, response) => {
     response.status(503).json(getReadiness(config));

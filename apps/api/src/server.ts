@@ -1,11 +1,13 @@
 import { createApp } from './app.js';
 import { ConfigurationError, loadEnvironment } from './config/env.js';
 import { createLogger } from './lib/logger.js';
+import { startSupportEmailWorker } from './modules/support/email.js';
 
 const startServer = (): void => {
   const config = loadEnvironment();
   const logger = createLogger(config.LOG_LEVEL);
   const app = createApp(config, logger);
+  const stopEmailWorker = startSupportEmailWorker(config, logger);
   const server = app.listen(config.PORT, config.HOST, () => {
     logger.info(
       { event: 'server_started', host: config.HOST, port: config.PORT },
@@ -22,6 +24,7 @@ const startServer = (): void => {
   });
 
   const shutdown = (signal: string): void => {
+    stopEmailWorker();
     logger.info({ event: 'shutdown_started', signal }, 'Closing HTTP server.');
     const deadline = setTimeout(() => {
       logger.error({ event: 'shutdown_timeout' }, 'HTTP shutdown exceeded 10 seconds.');

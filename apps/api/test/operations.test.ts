@@ -178,6 +178,37 @@ describe('authenticated operational endpoints', () => {
     for (const secret of ['server-key', 'bolna-key', 'embedding-key'])
       expect(response.text).not.toContain(secret);
   });
+  it('keeps document previews behind administrator authorization', async () => {
+    await request(app()).get(`/api/admin/knowledge/${agent}`).expect(401);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: URL | string) => {
+        const path = new URL(url).pathname;
+        return Promise.resolve(
+          path === '/auth/v1/user'
+            ? json({ id: agent })
+            : path.endsWith('/admin_profiles')
+              ? json([{ id: agent }])
+              : json([
+                  {
+                    id: agent,
+                    title: 'Company guide',
+                    document_key: 'company-overview',
+                    version: '1.1',
+                    content_markdown: '# Company guide',
+                    content_sha256: 'a'.repeat(64),
+                  },
+                ]),
+        );
+      }),
+    );
+    const response = await request(app())
+      .get(`/api/admin/knowledge/${agent}`)
+      .set('Authorization', 'Bearer valid-admin')
+      .expect(200);
+    expect(response.body).toMatchObject({ data: { content_markdown: '# Company guide' } });
+    expect(response.text).not.toContain('server-key');
+  });
   it('adds stored tool relationships and source metadata only after the active-admin gate', async () => {
     const passage = '00000000-0000-4000-8000-000000000003';
     const document = '00000000-0000-4000-8000-000000000004';
@@ -238,10 +269,16 @@ describe('authenticated operational endpoints', () => {
     });
     const sources = fetch.mock.calls
       .map(([url]) => new URL(url))
-      .filter((url) => url.pathname.endsWith('/knowledge_chunks'));
+      .filter((url) => url.pathname.endsWith('/knowledge_chunks') && url.searchParams.has('id'));
     expect(sources).toHaveLength(1);
     expect(sources[0]?.searchParams.get('id')).toBe(`in.(${passage})`);
     expect(sources[0]?.searchParams.get('limit')).toBe('160');
+    const indexPreview = fetch.mock.calls
+      .map(([url]) => new URL(url))
+      .filter((url) => url.pathname.endsWith('/knowledge_chunks') && !url.searchParams.has('id'));
+    expect(indexPreview).toHaveLength(1);
+    expect(indexPreview[0]?.searchParams.get('select')).toBe('document_id');
+    expect(indexPreview[0]?.searchParams.get('limit')).toBe('1000');
   });
 });
 

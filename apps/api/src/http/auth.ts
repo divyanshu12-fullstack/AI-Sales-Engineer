@@ -56,5 +56,6 @@ export const requireAdmin =
       );
     if (!profiles.length)
       throw new HttpError(403, 'FORBIDDEN', 'An active administrator profile is required.');
+    _response.locals.adminId = id;
     next();
   };

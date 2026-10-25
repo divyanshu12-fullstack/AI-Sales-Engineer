@@ -11,6 +11,8 @@ import {
   RefreshCw,
   ShieldCheck,
   CircleAlert,
+  LifeBuoy,
+  CalendarDays,
 } from 'lucide-react';
 import { Brand } from '../../components/Brand.js';
 import { useOperations } from './use-operations.js';
@@ -18,37 +20,43 @@ import { RecordDetails } from './RecordDetails.js';
 import { WorkspaceViews } from './WorkspaceViews.js';
 import type { Selection, View } from './presentation.js';
 import { time } from './presentation.js';
+import { SupportWorkspace } from './SupportWorkspace.js';
 
 const views = [
   {
     id: 'overview',
     title: 'Overview',
     icon: LayoutDashboard,
-    description: 'A clear view of your recent conversations and opportunities.',
   },
   {
     id: 'calls',
     title: 'Calls',
     icon: Phone,
-    description: 'Conversation records, summaries and available extraction observations.',
   },
   {
     id: 'inquiries',
     title: 'Project inquiries',
     icon: FileText,
-    description: 'Requirements and contact details, ready for human review.',
+  },
+  {
+    id: 'support',
+    title: 'Support tickets',
+    icon: LifeBuoy,
+  },
+  {
+    id: 'meetings',
+    title: 'Meetings',
+    icon: CalendarDays,
   },
   {
     id: 'activity',
     title: 'Tools & activity',
     icon: Activity,
-    description: 'Trace the actual outcomes of tools and business actions.',
   },
   {
     id: 'knowledge',
     title: 'Knowledge status',
     icon: BookOpen,
-    description: 'Source versions and approvals in the knowledge catalog.',
   },
 ] as const;
 export const Dashboard = () => {
@@ -197,9 +205,7 @@ export const Dashboard = () => {
         <main id="workspace-main" className="workspace-main">
           <div className="workspace-heading">
             <div>
-              <p className="eyebrow">YOUR OPERATIONS WORKSPACE</p>
               <h1>{active.title}</h1>
-              <p>{active.description}</p>
             </div>
             <button
               className="workspace-refresh"
@@ -215,12 +221,10 @@ export const Dashboard = () => {
               className={`refresh-dot ${state.access === 'stale' ? 'refresh-dot--stale' : ''}`}
             />
             <span>
-              {state.updated
-                ? `Last refreshed ${time(state.updated)}`
-                : 'Waiting for the first authorized snapshot'}
+              {state.updated ? `Last refreshed ${time(state.updated)}` : 'Loading records…'}
             </span>
             <span>·</span>
-            <span>Updates every 3 seconds</span>
+            <span>Auto-refresh on</span>
           </div>
           {state.error && (
             <div role="alert" className="workspace-notice workspace-notice--error">
@@ -239,18 +243,27 @@ export const Dashboard = () => {
           )}
           {state.data ? (
             <>
-              <WorkspaceViews
-                key={view}
-                view={view}
-                data={state.data}
-                onView={setView}
-                onSelect={setSelection}
-              />
+              {view === 'support' ? (
+                <SupportWorkspace
+                  data={state.data.support}
+                  onUpdate={state.updateTicket}
+                  onRetry={state.retrySupportEmail}
+                />
+              ) : (
+                <WorkspaceViews
+                  key={view}
+                  view={view}
+                  data={state.data}
+                  onView={setView}
+                  onSelect={setSelection}
+                />
+              )}
               <RecordDetails
                 selection={selection}
                 data={state.data}
                 onClose={() => setSelection(null)}
                 onSelect={setSelection}
+                loadDocument={state.loadKnowledge}
               />
             </>
           ) : state.access === 'loading' ? (
@@ -277,7 +290,7 @@ export const Dashboard = () => {
             </div>
           )}
           <footer className="workspace-footer">
-            Recent records only · Polling updates, not a live transcript stream
+            Showing recent records
             <span>Private workspace</span>
           </footer>
         </main>

@@ -1,15 +1,16 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { X, ArrowUpRight } from 'lucide-react';
-import type { Dashboard } from '@asterbyte/contracts';
-import { knowledgeId, label, time } from './presentation.js';
+import type { Dashboard, KnowledgeDocument } from '@asterbyte/contracts';
+import { knowledgeId, label, time, callLabel, duration } from './presentation.js';
+import { KnowledgeReader } from './KnowledgeReader.js';
 import { Badge } from './Badge.js';
 import type { Selection } from './presentation.js';
 
 const Field = ({ name, children }: { name: string; children: ReactNode }) => (
   <div className="detail-field">
     <dt>{name}</dt>
-    <dd>{children || 'Not available'}</dd>
+    <dd>{children ?? 'Not available'}</dd>
   </div>
 );
 export const RecordDetails = ({
@@ -17,11 +18,13 @@ export const RecordDetails = ({
   data,
   onClose,
   onSelect,
+  loadDocument,
 }: {
   selection: Selection | null;
   data: Dashboard;
   onClose: () => void;
   onSelect: (selection: Selection) => void;
+  loadDocument: (id: string, signal: AbortSignal) => Promise<KnowledgeDocument>;
 }) => {
   const dialog = useRef<HTMLDialogElement>(null);
   const open = selection !== null;
@@ -54,10 +57,14 @@ export const RecordDetails = ({
     selection?.kind === 'knowledge'
       ? data.knowledge.find((item) => knowledgeId(item) === selection.id)
       : undefined;
+  const meeting =
+    selection?.kind === 'meeting'
+      ? data.meetings.find((item) => item.id === selection.id)
+      : undefined;
   const evidence = call?.provider_execution_id
     ? data.evidence.find((item) => item.execution_id === call.provider_execution_id)
     : undefined;
-  const found = call ?? inquiry ?? tool ?? event ?? knowledge;
+  const found = call ?? inquiry ?? tool ?? event ?? knowledge ?? meeting;
   return (
     <dialog
       className="record-dialog"
@@ -67,7 +74,18 @@ export const RecordDetails = ({
       onCancel={onClose}
     >
       <header className="detail-header">
-        <p className="eyebrow">RECORD DETAILS</p>
+        <p className="eyebrow">
+          {selection
+            ? {
+                call: 'CALL DETAILS',
+                inquiry: 'PROJECT INQUIRY',
+                tool: 'TOOL RESULT',
+                event: 'ACTIVITY',
+                knowledge: 'KNOWLEDGE DOCUMENT',
+                meeting: 'MEETING',
+              }[selection.kind]
+            : 'DETAILS'}
+        </p>
         <button type="button" className="icon-button" aria-label="Close details" onClick={onClose}>
           <X size={20} />
         </button>
@@ -75,13 +93,14 @@ export const RecordDetails = ({
       <div className="detail-body">
         <h2 id="record-heading">
           {inquiry?.title ??
-            call?.code ??
+            (call ? callLabel(call) : undefined) ??
+            meeting?.title ??
             (tool ? label(tool.tool_name) : knowledge?.title || knowledge?.document_key) ??
             (event ? label(event.event_type) : 'Record details')}
         </h2>
         {!found && (
           <p className="empty-text">
-            This record is no longer in the loaded recent snapshot. Close this panel and refresh.
+            This record is no longer in the recent list. Refresh to check again.
           </p>
         )}
         {call && (
@@ -89,24 +108,26 @@ export const RecordDetails = ({
             <div className="detail-status">
               <Badge value={call.status} />
               <span>
-                {call.record_source === 'imported_history' ? 'Imported history' : 'Provider record'}
+                {call.record_source === 'imported_history' ? 'Imported history' : 'Bolna call'}
               </span>
             </div>
             <dl>
               <Field name="Started">{time(call.started_at)}</Field>
+              <Field name="Duration">{duration(call.duration_seconds)}</Field>
+              {call.channel && (
+                <Field name="Channel">
+                  {label(call.channel)}
+                  {call.direction ? ` · ${label(call.direction)}` : ''}
+                </Field>
+              )}
               <Field name="Summary">
-                <p className="preserve-text">
-                  {call.summary || 'A finalized summary is not available yet.'}
-                </p>
+                <p className="preserve-text">{call.summary || 'No summary yet.'}</p>
               </Field>
               {evidence && (
                 <>
                   <Field name="Provider status">{label(evidence.provider_status)}</Field>
-                  <Field name="Conversation duration">
-                    {evidence.conversation_duration} seconds
-                  </Field>
-                  <Field name="Extraction observations">
-                    <div className="observation-note">Caller-provided / unverified</div>
+                  <Field name="Contact details from call">
+                    <div className="observation-note">As reported by the caller · not verified</div>
                     {Object.keys(evidence.contact_observations).length
                       ? Object.entries(evidence.contact_observations).map(([key, value]) => (
                           <p key={key}>
@@ -114,24 +135,24 @@ export const RecordDetails = ({
                             {typeof value === 'string' ? value : 'Not available'}
                           </p>
                         ))
-                      : 'No contact observations available.'}
+                      : 'No contact details captured.'}
                   </Field>
                 </>
               )}
-              <Field name="Stored inquiry links">
+              <Field name="Linked inquiries">
                 {data.inquiries.some((item) => item.source_call_id === call.id)
                   ? data.inquiries
                       .filter((item) => item.source_call_id === call.id)
                       .map((item) => (
                         <div key={item.id}>{link('inquiry', item.id, item.title, true)}</div>
                       ))
-                  : 'No stored inquiry link in this snapshot.'}
+                  : 'No linked inquiry in recent records.'}
               </Field>
             </dl>
             <details className="technical-details">
-              <summary>Technical provenance</summary>
+              <summary>Record identifiers</summary>
               <dl>
-                <Field name="Call ID">
+                <Field name="Database record ID">
                   <span className="mono">{call.id}</span>
                 </Field>
                 <Field name="Provider execution ID">
@@ -156,7 +177,7 @@ export const RecordDetails = ({
                 <span className="mono">{inquiry.code}</span>
               </Field>
               <Field name="Received">{time(inquiry.created_at)}</Field>
-              <Field name="Requirements">
+              <Field name="Project brief">
                 <p className="preserve-text">{inquiry.requirements}</p>
               </Field>
               {['customer_name', 'organization', 'email', 'phone', 'budget', 'timeline'].map(
@@ -176,11 +197,11 @@ export const RecordDetails = ({
                       'Open linked call',
                       data.calls.some((item) => item.id === inquiry.source_call_id),
                     )
-                  : 'No stored call association.'}
+                  : 'No linked call.'}
               </Field>
             </dl>
             <details className="technical-details">
-              <summary>Intake provenance</summary>
+              <summary>How this inquiry was recorded</summary>
               <dl>
                 {['identity_status', 'confirmation_source', 'call_link_status'].map((key) => (
                   <Field key={key} name={label(key)}>
@@ -200,8 +221,8 @@ export const RecordDetails = ({
             </div>
             <dl>
               <Field name="Attempted">{time(tool.created_at)}</Field>
-              <Field name="Error code">{tool.error_code || 'No error recorded'}</Field>
-              <Field name="Stored inquiry link">
+              {tool.error_code && <Field name="Error">{tool.error_code}</Field>}
+              <Field name="Created inquiry">
                 {tool.inquiry_id
                   ? link(
                       'inquiry',
@@ -209,7 +230,7 @@ export const RecordDetails = ({
                       'Open created inquiry',
                       data.inquiries.some((item) => item.id === tool.inquiry_id),
                     )
-                  : 'No inquiry link recorded.'}
+                  : 'None'}
               </Field>
               <Field name="Retrieved sources">
                 {tool.source_ids.length
@@ -219,7 +240,18 @@ export const RecordDetails = ({
                         <div className="source-reference" key={id}>
                           {source ? (
                             <>
-                              <strong>{source.title}</strong>
+                              <button
+                                className="detail-link"
+                                onClick={() =>
+                                  onSelect({
+                                    kind: 'knowledge',
+                                    id: `${source.document_key}@${source.version}`,
+                                  })
+                                }
+                              >
+                                {source.title}
+                                <ArrowUpRight size={14} />
+                              </button>
                               <p>
                                 {source.document_key} · v{source.version} · passage{' '}
                                 {source.chunk_index + 1}
@@ -231,7 +263,7 @@ export const RecordDetails = ({
                         </div>
                       );
                     })
-                  : 'No retrieved passages recorded for this attempt.'}
+                  : 'No knowledge passages used.'}
               </Field>
               <Field name="Attempt ID">
                 <span className="mono">{tool.id}</span>
@@ -252,7 +284,7 @@ export const RecordDetails = ({
                     'Open related call',
                     data.calls.some((item) => item.id === event.call_id),
                   )
-                : 'No stored call link.'}
+                : 'No linked call.'}
             </Field>
           </dl>
         )}
@@ -261,19 +293,60 @@ export const RecordDetails = ({
             <div className="detail-status">
               <Badge value={knowledge.approval_status} />
             </div>
+            <div className="knowledge-summary">
+              <span>Version {knowledge.version}</span>
+              <span>
+                {knowledge.visibility ? label(knowledge.visibility) : 'Visibility unavailable'}
+              </span>
+              <span>{knowledge.indexed_passages} indexed passages</span>
+            </div>
+            {knowledge.id ? (
+              <KnowledgeReader key={knowledge.id} id={knowledge.id} load={loadDocument} />
+            ) : (
+              <p className="detail-footnote">Document preview is unavailable for this record.</p>
+            )}
+            <details className="technical-details">
+              <summary>Source details</summary>
+              <dl>
+                <Field name="Document key">{knowledge.document_key}</Field>
+                <Field name="Approved">{time(knowledge.approved_at)}</Field>
+                <Field name="Source path">
+                  <span className="mono">{knowledge.source_path}</span>
+                </Field>
+              </dl>
+            </details>
+          </>
+        )}
+        {meeting && (
+          <>
+            <div className="detail-status">
+              <Badge value={meeting.status} />
+              {meeting.status === 'requested' && (
+                <span>Awaiting confirmation — not booked yet</span>
+              )}
+            </div>
             <dl>
-              <Field name="Document">{knowledge.document_key}</Field>
-              <Field name="Version">{knowledge.version}</Field>
-              <Field name="Visibility">{knowledge.visibility || 'Not provided'}</Field>
-              <Field name="Approved">{time(knowledge.approved_at)}</Field>
-              <Field name="Source path">
-                <span className="mono">{knowledge.source_path}</span>
-              </Field>
+              <Field name="When">{time(meeting.requested_start_at)}</Field>
+              <Field name="Meeting timezone">{meeting.timezone}</Field>
+              <Field name="Duration">{meeting.duration_minutes} minutes</Field>
+              <Field name="Host">{meeting.employees?.full_name ?? 'Unassigned'}</Field>
+              {meeting.inquiry_id && (
+                <Field name="Project inquiry">
+                  {link(
+                    'inquiry',
+                    meeting.inquiry_id,
+                    'Open inquiry',
+                    data.inquiries.some((i) => i.id === meeting.inquiry_id),
+                  )}
+                </Field>
+              )}
+              <Field name="Reference">{meeting.code}</Field>
+              {meeting.provider_event_id && (
+                <Field name="Calendar reference">
+                  {meeting.provider} · {meeting.provider_event_id}
+                </Field>
+              )}
             </dl>
-            <p className="detail-footnote">
-              Catalog approval is separate from embedding coverage. Source versions shown in tool
-              results identify the passages actually retrieved.
-            </p>
           </>
         )}
       </div>

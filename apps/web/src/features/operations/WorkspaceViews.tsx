@@ -4,26 +4,32 @@ import {
   Search,
   Phone,
   FileText,
-  Activity,
+  LifeBuoy,
+  CalendarDays,
   BookOpen,
   ArrowRight,
 } from 'lucide-react';
 import type { Dashboard } from '@asterbyte/contracts';
-import { knowledgeId, label, matches, shortId, time } from './presentation.js';
+import {
+  knowledgeId,
+  label,
+  matches,
+  time,
+  callLabel,
+  duration,
+  potentialLeads,
+  pendingTickets,
+} from './presentation.js';
 import { Badge } from './Badge.js';
+import { RecordRow, RecordButton } from './RecordRow.js';
 import type { Selection, View } from './presentation.js';
 
-const Empty = ({ title, body }: { title: string; body: string }) => (
+const Empty = ({ title, body }: { title: string; body?: string }) => (
   <div className="workspace-empty">
     <Search size={23} strokeWidth={1.5} />
     <h3>{title}</h3>
-    <p>{body}</p>
+    {body && <p>{body}</p>}
   </div>
-);
-const ViewRecord = ({ title, onClick }: { title: string; onClick: () => void }) => (
-  <button className="row-open" aria-label={title} onClick={onClick}>
-    <ArrowUpRight size={18} />
-  </button>
 );
 export const WorkspaceViews = ({
   view,
@@ -68,6 +74,11 @@ export const WorkspaceViews = ({
       matches(query, d.title, d.document_key, d.version) &&
       (status === 'all' || d.approval_status === status),
   );
+  const meetings = data.meetings.filter(
+    (m) =>
+      matches(query, m.title, m.code, m.employees?.full_name) &&
+      (status === 'all' || m.status === status),
+  );
   const statuses = [
     ...new Set(
       view === 'calls'
@@ -76,43 +87,46 @@ export const WorkspaceViews = ({
           ? data.inquiries.map((i) => i.stage)
           : view === 'activity'
             ? data.tools.map((t) => t.status)
-            : data.knowledge.map((d) => d.approval_status),
+            : view === 'meetings'
+              ? data.meetings.map((m) => m.status)
+              : data.knowledge.map((d) => d.approval_status),
     ),
   ];
-  // Polling can remove the last row for a selected status; keep the filter visible and clearable.
   if (status !== 'all' && !statuses.includes(status)) statuses.push(status);
+  const open = (kind: Selection['kind'], id: string) => () => onSelect({ kind, id });
+  const scheduled = data.meetings.filter((m) => m.status === 'confirmed');
   if (view === 'overview')
     return (
       <>
         <div className="metric-grid">
           {[
             {
-              title: 'Recent calls',
+              title: 'Recent Calls',
               value: data.calls.length,
-              detail: `${data.calls.filter((c) => c.record_source === 'provider').length} provider records`,
+              detail: 'Last 30 calls',
               icon: Phone,
               target: 'calls' as View,
             },
             {
-              title: 'Project inquiries',
-              value: data.inquiries.length,
-              detail: `${data.inquiries.filter((i) => !i.import_batch).length} incoming voice inquiries`,
+              title: 'Potential Leads',
+              value: potentialLeads(data).length,
+              detail: 'Open leads · recent 30 inquiries',
               icon: FileText,
               target: 'inquiries' as View,
             },
             {
-              title: 'Tool attempts',
-              value: data.tools.length,
-              detail: `${data.tools.filter((t) => t.status === 'failed').length} failed attempts`,
-              icon: Activity,
-              target: 'activity' as View,
+              title: 'Pending Tickets',
+              value: pendingTickets(data).length,
+              detail: 'Unresolved · recent 40 tickets',
+              icon: LifeBuoy,
+              target: 'support' as View,
             },
             {
-              title: 'Knowledge versions',
-              value: data.knowledge.length,
-              detail: `${data.knowledge.filter((d) => d.approval_status === 'approved').length} approved in catalog`,
-              icon: BookOpen,
-              target: 'knowledge' as View,
+              title: 'Upcoming Meetings',
+              value: scheduled.length,
+              detail: `${data.meetings.filter((m) => m.status === 'requested').length} awaiting confirmation · next 30 records`,
+              icon: CalendarDays,
+              target: 'meetings' as View,
             },
           ].map(({ title, value, detail, icon: Icon, target }) => (
             <button className="metric-card" key={title} onClick={() => onView(target)}>
@@ -125,38 +139,38 @@ export const WorkspaceViews = ({
             </button>
           ))}
         </div>
-        <p className="snapshot-scope">
-          Counts describe the loaded snapshot only: up to 30 calls, 30 inquiries and 40 tool
-          attempts. Imported history is included unless labeled otherwise.
-        </p>
+        <div className="overview-next">
+          <span>
+            {pendingTickets(data).length
+              ? `${pendingTickets(data).length} unresolved ${pendingTickets(data).length === 1 ? 'ticket' : 'tickets'} to follow up`
+              : 'No unresolved tickets in recent records'}
+          </span>
+          <button className="workspace-link" onClick={() => onView('support')}>
+            View tickets <ArrowRight size={15} />
+          </button>
+        </div>
         <div className="overview-grid">
           <section className="workspace-panel">
             <header>
-              <div>
-                <h2>Recent conversations</h2>
-                <p>From the latest loaded calls</p>
-              </div>
+              <h2>Recent calls</h2>
               <button className="workspace-link" onClick={() => onView('calls')}>
-                View calls <ArrowRight size={15} />
+                View all <ArrowRight size={15} />
               </button>
             </header>
             {data.calls.length ? (
               <ul className="overview-list">
                 {data.calls.slice(0, 5).map((call) => (
                   <li key={call.id}>
-                    <button onClick={() => onSelect({ kind: 'call', id: call.id })}>
+                    <button onClick={open('call', call.id)}>
                       <span className="list-record-icon">
                         <Phone size={17} />
                       </span>
                       <div>
-                        <strong>
-                          {call.summary
-                            ? `${call.summary.slice(0, 60)}${call.summary.length > 60 ? '…' : ''}`
-                            : 'Conversation awaiting summary'}
+                        <strong className="record-id" title={callLabel(call)}>
+                          {callLabel(call)}
                         </strong>
                         <p>
-                          {time(call.started_at)} ·{' '}
-                          {call.record_source === 'imported_history' ? 'Imported' : 'Provider'}
+                          {time(call.started_at)} · {duration(call.duration_seconds)}
                         </p>
                       </div>
                       <Badge value={call.status} />
@@ -165,80 +179,63 @@ export const WorkspaceViews = ({
                 ))}
               </ul>
             ) : (
-              <Empty
-                title="No calls in this snapshot"
-                body="Stored calls will appear here after they are received."
-              />
+              <Empty title="No calls yet" />
             )}
           </section>
           <section className="workspace-panel">
             <header>
-              <div>
-                <h2>Project opportunities</h2>
-                <p>New work, ready for review</p>
-              </div>
+              <h2>Potential leads</h2>
               <button className="workspace-link" onClick={() => onView('inquiries')}>
                 View all <ArrowRight size={15} />
               </button>
             </header>
-            {data.inquiries.length ? (
+            {potentialLeads(data).length ? (
               <ul className="overview-inquiries">
-                {data.inquiries.slice(0, 4).map((inquiry) => (
-                  <li key={inquiry.id}>
-                    <button onClick={() => onSelect({ kind: 'inquiry', id: inquiry.id })}>
-                      <div>
-                        <span>
-                          {inquiry.import_batch ? 'IMPORTED HISTORY' : 'INCOMING INQUIRY'}
-                        </span>
-                        <Badge value={inquiry.stage} />
-                      </div>
-                      <strong>{inquiry.title}</strong>
-                      <p>
-                        {inquiry.requirements.slice(0, 105)}
-                        {inquiry.requirements.length > 105 ? '…' : ''}
-                      </p>
-                    </button>
-                  </li>
-                ))}
+                {potentialLeads(data)
+                  .slice(0, 4)
+                  .map((i) => (
+                    <li key={i.id}>
+                      <button onClick={open('inquiry', i.id)}>
+                        <div>
+                          <span>{i.import_batch ? 'IMPORTED' : 'VOICE INQUIRY'}</span>
+                          <Badge value={i.stage} />
+                        </div>
+                        <strong>{i.title}</strong>
+                        <p>
+                          {typeof i.intake_details.customer_name === 'string'
+                            ? i.intake_details.customer_name
+                            : i.code}{' '}
+                          · {time(i.created_at)}
+                        </p>
+                      </button>
+                    </li>
+                  ))}
               </ul>
             ) : (
-              <Empty
-                title="No inquiries yet"
-                body="Confirmed project inquiries will appear here."
-              />
+              <Empty title="No open leads" />
             )}
           </section>
         </div>
         <section className="workspace-panel overview-activity">
           <header>
-            <div>
-              <h2>Latest activity</h2>
-              <p>Committed business events</p>
-            </div>
+            <h2>Latest activity</h2>
             <button className="workspace-link" onClick={() => onView('activity')}>
-              All activity <ArrowRight size={15} />
+              View all <ArrowRight size={15} />
             </button>
           </header>
           {data.events.length ? (
-            data.events.slice(0, 4).map((event) => (
-              <button
-                className="activity-line"
-                key={event.id}
-                onClick={() => onSelect({ kind: 'event', id: event.id })}
-              >
+            data.events.slice(0, 4).map((e) => (
+              <button className="activity-line" key={e.id} onClick={open('event', e.id)}>
                 <span className="event-node" />
                 <div>
-                  <strong>{event.description}</strong>
-                  <p>{label(event.event_type)}</p>
+                  <strong>{e.description}</strong>
+                  <p>{label(e.event_type)}</p>
                 </div>
-                <time>{time(event.occurred_at)}</time>
+                <time>{time(e.occurred_at)}</time>
               </button>
             ))
           ) : (
-            <Empty
-              title="No activity recorded"
-              body="Business events will appear after a committed action."
-            />
+            <Empty title="No activity yet" />
           )}
         </section>
       </>
@@ -253,14 +250,14 @@ export const WorkspaceViews = ({
           </span>
           <input
             type="search"
-            placeholder={`Search ${view === 'activity' ? 'tools and activity' : view}…`}
+            placeholder={`Search ${view === 'inquiries' ? 'leads' : view === 'knowledge' ? 'documents' : view === 'activity' ? 'tools and activity' : view}…`}
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(e) => setQuery(e.target.value)}
           />
         </label>
         <label className="filter-field">
           <span className="sr-only">Filter by status</span>
-          <select value={status} onChange={(event) => setStatus(event.target.value)}>
+          <select value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="all">All statuses</option>
             {statuses.map((s) => (
               <option key={s} value={s}>
@@ -272,139 +269,148 @@ export const WorkspaceViews = ({
         {['calls', 'inquiries'].includes(view) && (
           <label className="filter-field">
             <span className="sr-only">Filter by source</span>
-            <select value={source} onChange={(event) => setSource(event.target.value)}>
+            <select value={source} onChange={(e) => setSource(e.target.value)}>
               <option value="all">All sources</option>
-              <option value="incoming">Incoming / provider</option>
+              <option value="incoming">Voice calls / inquiries</option>
               <option value="imported">Imported history</option>
             </select>
           </label>
         )}
       </div>
-      <p className="snapshot-scope">
-        Search and filters apply only to currently loaded records, not the entire database.
-      </p>
       {view === 'calls' && (
-        <section className="workspace-panel table-panel">
+        <section className="workspace-panel table-panel calls-table">
           <header>
-            <h2>
-              Calls{' '}
-              <span className="count-pill">
-                {calls.length} shown / {data.calls.length} loaded
-              </span>
-            </h2>
+            <h2>Calls</h2>
+            <span className="count-pill">
+              {calls.length} shown · {data.calls.length} recent
+            </span>
           </header>
           {calls.length ? (
             <div className="table-scroll">
               <table>
                 <thead>
                   <tr>
-                    <th>Call</th>
+                    <th>Call ID</th>
                     <th>Started</th>
+                    <th>Duration</th>
                     <th>Status</th>
-                    <th className="optional-column">Source</th>
-                    <th>
-                      <span className="sr-only">Details</span>
-                    </th>
+                    <th className="optional-column">Channel</th>
                   </tr>
                 </thead>
                 <tbody>
                   {calls.map((call) => (
-                    <tr key={call.id}>
+                    <RecordRow key={call.id} onOpen={open('call', call.id)}>
                       <td>
-                        <button
-                          className="record-name"
-                          onClick={() => onSelect({ kind: 'call', id: call.id })}
+                        <RecordButton
+                          label={`View call ${call.code}`}
+                          onOpen={open('call', call.id)}
                         >
-                          {shortId(call.code)}
-                        </button>
-                        <p className="cell-summary">{call.summary || 'Summary pending'}</p>
+                          <span className="record-id" title={callLabel(call)}>
+                            {callLabel(call)}
+                          </span>
+                        </RecordButton>
                       </td>
                       <td className="date-cell">{time(call.started_at)}</td>
+                      <td>{duration(call.duration_seconds)}</td>
                       <td>
                         <Badge value={call.status} />
                       </td>
                       <td className="optional-column cell-muted">
-                        {call.record_source === 'imported_history'
-                          ? 'Imported history'
-                          : 'Provider record'}
+                        {call.channel ? label(call.channel) : '—'}
                       </td>
-                      <td>
-                        <ViewRecord
-                          title={`View call ${call.code}`}
-                          onClick={() => onSelect({ kind: 'call', id: call.id })}
-                        />
-                      </td>
-                    </tr>
+                    </RecordRow>
                   ))}
                 </tbody>
               </table>
             </div>
           ) : (
-            <Empty
-              title="No matching calls"
-              body="Try a different filter or search term. Only the recent loaded calls are searched."
-            />
+            <Empty title="No matching calls" body="Try another search or clear the filters." />
           )}
         </section>
       )}
       {view === 'inquiries' && (
         <section className="workspace-panel table-panel">
           <header>
-            <h2>
-              Project inquiries{' '}
-              <span className="count-pill">
-                {inquiries.length} shown / {data.inquiries.length} loaded
-              </span>
-            </h2>
+            <h2>Project inquiries</h2>
+            <span className="count-pill">
+              {inquiries.length} shown · {data.inquiries.length} recent
+            </span>
           </header>
           {inquiries.length ? (
             <div className="table-scroll">
               <table>
                 <thead>
                   <tr>
-                    <th>Opportunity</th>
+                    <th>Project</th>
+                    <th>Contact</th>
                     <th>Received</th>
                     <th>Stage</th>
-                    <th className="optional-column">Source</th>
-                    <th>
-                      <span className="sr-only">Details</span>
-                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {inquiries.map((inquiry) => (
-                    <tr key={inquiry.id}>
+                  {inquiries.map((i) => (
+                    <RecordRow key={i.id} onOpen={open('inquiry', i.id)}>
                       <td>
-                        <button
-                          className="record-name"
-                          onClick={() => onSelect({ kind: 'inquiry', id: inquiry.id })}
-                        >
-                          {inquiry.title}
-                        </button>
-                        <p className="cell-summary">{inquiry.requirements}</p>
-                      </td>
-                      <td className="date-cell">{time(inquiry.created_at)}</td>
-                      <td>
-                        <Badge value={inquiry.stage} />
-                      </td>
-                      <td className="optional-column cell-muted">
-                        {inquiry.import_batch ? 'Imported history' : 'Voice intake'}
+                        <RecordButton onOpen={open('inquiry', i.id)}>{i.title}</RecordButton>
+                        <p className="cell-muted">{i.code}</p>
                       </td>
                       <td>
-                        <ViewRecord
-                          title={`View inquiry ${inquiry.title}`}
-                          onClick={() => onSelect({ kind: 'inquiry', id: inquiry.id })}
-                        />
+                        {typeof i.intake_details.customer_name === 'string'
+                          ? i.intake_details.customer_name
+                          : '—'}
                       </td>
-                    </tr>
+                      <td className="date-cell">{time(i.created_at)}</td>
+                      <td>
+                        <Badge value={i.stage} />
+                      </td>
+                    </RecordRow>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <Empty title="No matching inquiries" body="Try another search or clear the filters." />
+          )}
+        </section>
+      )}
+      {view === 'meetings' && (
+        <section className="workspace-panel table-panel">
+          <header>
+            <h2>Upcoming meetings</h2>
+            <span className="count-pill">{meetings.length} shown · up to 30 upcoming records</span>
+          </header>
+          {meetings.length ? (
+            <div className="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Meeting</th>
+                    <th>When</th>
+                    <th>Host</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {meetings.map((m) => (
+                    <RecordRow key={m.id} onOpen={open('meeting', m.id)}>
+                      <td>
+                        <RecordButton onOpen={open('meeting', m.id)}>{m.title}</RecordButton>
+                        <p className="cell-muted">{m.duration_minutes} min</p>
+                      </td>
+                      <td className="date-cell">{time(m.requested_start_at)}</td>
+                      <td>{m.employees?.full_name ?? 'Unassigned'}</td>
+                      <td>
+                        <Badge value={m.status} />
+                      </td>
+                    </RecordRow>
                   ))}
                 </tbody>
               </table>
             </div>
           ) : (
             <Empty
-              title="No matching inquiries"
-              body="Try clearing the filters. An ordinary conversation does not automatically create an inquiry."
+              title="No upcoming meetings"
+              body="Meeting requests and confirmed appointments will appear here when recorded."
             />
           )}
         </section>
@@ -413,15 +419,10 @@ export const WorkspaceViews = ({
         <div className="activity-view">
           <section className="workspace-panel table-panel">
             <header>
-              <div>
-                <h2>
-                  Tool attempts{' '}
-                  <span className="count-pill">
-                    {tools.length} shown / {data.tools.length} loaded
-                  </span>
-                </h2>
-                <p>Backend outcomes; no assumed call association</p>
-              </div>
+              <h2>Tool results</h2>
+              <span className="count-pill">
+                {tools.length} shown · {data.tools.length} recent
+              </span>
             </header>
             {tools.length ? (
               <div className="table-scroll">
@@ -429,116 +430,116 @@ export const WorkspaceViews = ({
                   <thead>
                     <tr>
                       <th>Tool</th>
-                      <th>Attempted</th>
-                      <th>Outcome</th>
-                      <th>
-                        <span className="sr-only">Details</span>
-                      </th>
+                      <th>Time</th>
+                      <th>Result</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {tools.map((tool) => (
-                      <tr key={tool.id}>
+                    {tools.map((t) => (
+                      <RecordRow key={t.id} onOpen={open('tool', t.id)}>
                         <td>
-                          <button
-                            className="record-name"
-                            onClick={() => onSelect({ kind: 'tool', id: tool.id })}
+                          <RecordButton
+                            label={`View tool attempt ${t.id}`}
+                            onOpen={open('tool', t.id)}
                           >
-                            {label(tool.tool_name)}
-                          </button>
+                            {label(t.tool_name)}
+                          </RecordButton>
                           <p className="cell-muted">
-                            {tool.source_ids.length} source passages
-                            {tool.error_code ? ` · ${tool.error_code}` : ''}
+                            {t.error_code ?? `${t.source_ids.length} source passages`}
                           </p>
                         </td>
-                        <td className="date-cell">{time(tool.created_at)}</td>
+                        <td className="date-cell">{time(t.created_at)}</td>
                         <td>
-                          <Badge value={tool.status} />
+                          <Badge value={t.status} />
                         </td>
-                        <td>
-                          <ViewRecord
-                            title={`View tool attempt ${tool.id}`}
-                            onClick={() => onSelect({ kind: 'tool', id: tool.id })}
-                          />
-                        </td>
-                      </tr>
+                      </RecordRow>
                     ))}
                   </tbody>
                 </table>
               </div>
             ) : (
-              <Empty
-                title="No matching tool attempts"
-                body="Tools appear when the backend receives a real invocation."
-              />
+              <Empty title="No matching tool results" />
             )}
           </section>
           <section className="workspace-panel">
             <header>
-              <div>
-                <h2>Business activity</h2>
-                <p>
-                  {events.length} shown / {data.events.length} loaded · status filter applies to
-                  tool attempts only
-                </p>
-              </div>
+              <h2>Activity</h2>
+              <span className="count-pill">
+                {events.length} shown · {data.events.length} recent
+              </span>
             </header>
             {events.length ? (
-              events.map((event) => (
-                <button
-                  className="activity-line"
-                  key={event.id}
-                  onClick={() => onSelect({ kind: 'event', id: event.id })}
-                >
+              events.map((e) => (
+                <button className="activity-line" key={e.id} onClick={open('event', e.id)}>
                   <span className="event-node" />
                   <div>
-                    <strong>{event.description}</strong>
-                    <p>{label(event.event_type)}</p>
+                    <strong>{e.description}</strong>
+                    <p>{label(e.event_type)}</p>
                   </div>
-                  <time>{time(event.occurred_at)}</time>
+                  <time>{time(e.occurred_at)}</time>
                 </button>
               ))
             ) : (
-              <Empty
-                title="No matching activity"
-                body="Try another search, or wait for a committed business action."
-              />
+              <Empty title="No matching activity" />
             )}
           </section>
         </div>
       )}
       {view === 'knowledge' && (
-        <section className="knowledge-grid">
-          {knowledge.length ? (
-            knowledge.map((doc) => (
-              <button
-                className="knowledge-card"
-                key={knowledgeId(doc)}
-                onClick={() => onSelect({ kind: 'knowledge', id: knowledgeId(doc) })}
-              >
-                <div>
-                  <BookOpen size={21} strokeWidth={1.5} />
-                  <Badge value={doc.approval_status} />
-                </div>
-                <h2>{doc.title || label(doc.document_key)}</h2>
-                <p>{doc.document_key}</p>
-                <footer>
-                  <span>
-                    Version {doc.version}
-                    {doc.visibility ? ` · ${label(doc.visibility)}` : ''}
-                  </span>
-                  <ArrowUpRight size={18} />
-                </footer>
-              </button>
-            ))
-          ) : (
-            <Empty
-              title="No matching documents"
-              body="Search the loaded knowledge catalog by title, key or version."
-            />
-          )}
-        </section>
+        <>
+          <div className="knowledge-summary">
+            <span>
+              <strong>
+                {data.knowledge.filter((d) => d.approval_status === 'approved').length}
+              </strong>{' '}
+              approved documents
+            </span>
+            <span>
+              <strong>{data.knowledge.reduce((n, d) => n + d.indexed_passages, 0)}</strong> indexed
+              passages in preview
+            </span>
+            <span>Read-only · approval changes are managed separately</span>
+          </div>
+          <section className="knowledge-grid">
+            {knowledge.length ? (
+              knowledge.map((doc) => (
+                <button
+                  className="knowledge-card"
+                  key={knowledgeId(doc)}
+                  onClick={open('knowledge', knowledgeId(doc))}
+                >
+                  <div>
+                    <BookOpen size={21} strokeWidth={1.5} />
+                    <Badge value={doc.approval_status} />
+                  </div>
+                  <h2>{doc.title || label(doc.document_key)}</h2>
+                  <p>
+                    {doc.indexed_passages} indexed passages ·{' '}
+                    {doc.visibility ? label(doc.visibility) : 'Visibility unavailable'}
+                  </p>
+                  <footer>
+                    <span>Version {doc.version}</span>
+                    <span>
+                      Read document <ArrowUpRight size={16} />
+                    </span>
+                  </footer>
+                </button>
+              ))
+            ) : (
+              <Empty title="No matching documents" />
+            )}
+          </section>
+        </>
       )}
+      <details className="scope-details">
+        <summary>Record coverage</summary>
+        <p>
+          Search and counts use the records loaded here: 30 recent calls and inquiries, 40 tool
+          results and events, 40 tickets and up to 30 future meeting records. Knowledge index counts
+          preview up to 1,000 passage metadata records. Imported records are included; requested
+          meetings are not confirmed bookings.
+        </p>
+      </details>
     </>
   );
 };

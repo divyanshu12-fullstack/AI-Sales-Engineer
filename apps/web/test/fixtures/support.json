@@ -1,0 +1,39 @@
+{
+  "tickets": [
+    {
+      "id": "80000000-0000-4000-8000-000000000001",
+      "code": "SUP-EXAMPLE01",
+      "title": "Appointment list is empty",
+      "description": "The receptionist cannot see appointments or book patients. The caller first noticed the problem this morning. No cause has been established.",
+      "priority": "P2",
+      "status": "open",
+      "reported_at": "2026-10-25T09:00:00Z",
+      "resolution_summary": null,
+      "resolved_at": null,
+      "intake_identity_status": "demo_code_match",
+      "import_batch": null,
+      "projects": { "name": "Demo appointment system", "support_code": "9002" },
+      "customer_accounts": { "display_name": "Example demo account", "support_code": "9001" },
+      "contacts": {
+        "full_name": "Example demo customer",
+        "email_normalized": "customer@example.invalid",
+        "support_email_enabled": false
+      },
+      "employees": { "full_name": "Assigned support engineer" }
+    }
+  ],
+  "emails": [
+    {
+      "id": "80000000-0000-4000-8000-000000000002",
+      "status": "failed",
+      "attempts": 5,
+      "last_error_code": "EMAIL_RECIPIENT_DISABLED",
+      "provider_message_id": null,
+      "created_at": "2026-10-25T09:00:00Z",
+      "payload": {
+        "ticket_id": "80000000-0000-4000-8000-000000000001",
+        "template": "support_acknowledgement"
+      }
+    }
+  ]
+}

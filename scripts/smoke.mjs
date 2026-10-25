@@ -99,6 +99,7 @@ try {
       PORT: String(apiPort),
       WEB_ORIGIN: webUrl,
       LOG_LEVEL: 'silent',
+      SUPPORT_EMAIL_WORKER_ENABLED: 'false',
     },
   );
   const web = start(

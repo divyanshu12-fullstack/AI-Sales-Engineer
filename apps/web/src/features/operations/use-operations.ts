@@ -1,8 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Dashboard } from '@asterbyte/contracts';
-import { ApiRequestError, getActivity, getAuthConfig } from '../../lib/http.js';
+import {
+  ApiRequestError,
+  getActivity,
+  getAuthConfig,
+  updateSupportTicket,
+  retrySupportEmail,
+  getKnowledgeDocument,
+} from '../../lib/http.js';
 
 export const useOperations = () => {
   const [client, setClient] = useState<SupabaseClient | null>(null);
@@ -126,7 +133,15 @@ export const useOperations = () => {
     setAccess('signed_out');
     setError('');
   };
+  const loadKnowledge = useCallback(
+    async (id: string, signal: AbortSignal) => {
+      if (!token) throw new Error('Sign in to continue.');
+      return getKnowledgeDocument(token, id, signal);
+    },
+    [token],
+  );
   return {
+    loadKnowledge,
     ready: Boolean(client),
     signedIn: Boolean(token),
     data,
@@ -135,6 +150,16 @@ export const useOperations = () => {
     busy,
     signIn,
     signOut,
+    updateTicket: async (id: string, status: string, resolution: string) => {
+      if (!token) throw new Error('Sign in to continue.');
+      await updateSupportTicket(token, id, status, resolution);
+      setRefreshVersion((n) => n + 1);
+    },
+    retrySupportEmail: async (id: string) => {
+      if (!token) throw new Error('Sign in to continue.');
+      await retrySupportEmail(token, id);
+      setRefreshVersion((n) => n + 1);
+    },
     access,
     refresh: () => {
       setAccess('loading');

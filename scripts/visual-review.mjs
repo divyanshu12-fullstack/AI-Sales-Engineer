@@ -17,6 +17,9 @@ const output = join(root, 'artifacts', 'frontend');
 const fixture = JSON.parse(
   await readFile(join(root, 'apps/web/test/fixtures/dashboard.json'), 'utf8'),
 );
+fixture.support = JSON.parse(
+  await readFile(join(root, 'apps/web/test/fixtures/support.json'), 'utf8'),
+);
 const liveCall = process.argv.includes('--live-call');
 const reportFile = liveCall ? 'live-call-review.json' : 'review.json';
 const children = [];
@@ -98,6 +101,7 @@ try {
     PORT: String(apiPort),
     WEB_ORIGIN: url,
     LOG_LEVEL: 'silent',
+    SUPPORT_EMAIL_WORKER_ENABLED: 'false',
     NODE_ENV: 'development',
   });
   start(
@@ -217,6 +221,22 @@ try {
   await admin.route('**/api/admin/activity', (route) =>
     route.fulfill({ contentType: 'application/json', body: JSON.stringify({ data: fixture }) }),
   );
+  await admin.route('**/api/admin/knowledge/*', (route) =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          id: '70000000-0000-4000-8000-000000000001',
+          document_key: 'services-pricing',
+          title: 'Services, pricing and delivery',
+          version: '1.1',
+          content_markdown:
+            '# Services and pricing\n\nApproved example service information for the isolated UI review.',
+          content_sha256: 'a'.repeat(64),
+        },
+      }),
+    }),
+  );
   await admin.goto(`${url}/admin`);
   await expect(admin.getByRole('heading', { name: 'Welcome back.' })).toBeVisible();
   await admin.evaluate(() => globalThis.document.fonts.ready);
@@ -225,7 +245,7 @@ try {
   await admin.getByLabel('Password', { exact: true }).fill('fixture-password-not-a-real-account');
   await admin.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(admin.getByRole('heading', { name: 'Overview', exact: true })).toBeVisible();
-  await expect(admin.getByText(/Counts describe the loaded snapshot only/)).toBeVisible();
+  await expect(admin.getByText('Potential Leads', { exact: true })).toBeVisible();
   await screenshot(admin, 'dashboard-fixture-desktop.png', false);
   await admin
     .getByRole('navigation', { name: 'Workspace navigation' })
@@ -237,10 +257,11 @@ try {
   await admin.getByLabel('Filter by source').selectOption('all');
   await admin.getByRole('button', { name: 'View call CALL-BROWSER-EXAMPLE', exact: true }).click();
   await expect(admin.getByRole('dialog')).toBeVisible();
-  await expect(admin.getByText('No stored inquiry link in this snapshot.')).toBeVisible();
+  await expect(admin.getByText('No linked inquiry in recent records.')).toBeVisible();
   await screenshot(admin, 'dashboard-call-detail-fixture.png', false);
   await admin.keyboard.press('Escape');
   await expect(admin.getByRole('dialog')).not.toBeVisible();
+  await screenshot(admin, 'dashboard-calls-fixture.png', false);
   for (const width of [320, 390, 768, 1440]) {
     await admin.setViewportSize({ width, height: 900 });
     await noOverflow(admin, width, 'dashboard-calls');
@@ -260,6 +281,58 @@ try {
     .getByRole('button', { name: 'View tool attempt 40000000-0000-4000-8000-000000000001' })
     .click();
   await expect(admin.getByText('services-pricing · v1.1 · passage 1')).toBeVisible();
+  await admin.keyboard.press('Escape');
+  await admin
+    .getByRole('navigation')
+    .getByRole('button', { name: 'Knowledge status', exact: true })
+    .click();
+  await admin.getByRole('button', { name: /Services, pricing and delivery/ }).click();
+  await expect(
+    admin.getByText('Approved example service information for the isolated UI review.'),
+  ).toBeVisible();
+  await screenshot(admin, 'knowledge-document-fixture.png', false);
+  await admin.keyboard.press('Escape');
+  await admin
+    .getByRole('navigation')
+    .getByRole('button', { name: 'Meetings', exact: true })
+    .click();
+  await expect(admin.getByText('Website discovery call', { exact: true })).toBeVisible();
+  for (const width of [320, 390, 768, 1440]) {
+    await admin.setViewportSize({ width, height: 1000 });
+    await noOverflow(admin, width, 'dashboard-meetings');
+  }
+  await screenshot(admin, 'meetings-fixture.png', false);
+  await admin
+    .getByRole('navigation')
+    .getByRole('button', { name: 'Support tickets', exact: true })
+    .click();
+  await expect(admin.getByText('Appointment list is empty', { exact: true })).toBeVisible();
+  for (const width of [320, 390, 768, 1440]) {
+    await admin.setViewportSize({ width, height: 1000 });
+    await noOverflow(admin, width, 'dashboard-support');
+  }
+  await screenshot(admin, 'support-tickets-fixture.png', false);
+  await admin.getByRole('button', { name: 'Appointment list is empty', exact: true }).click();
+  await expect(admin.getByRole('dialog')).toBeVisible();
+  await expect(admin.getByText(/Sending disabled for this demo contact/)).toBeVisible();
+  await screenshot(admin, 'support-ticket-detail-fixture.png', false);
+  await admin.route('**/api/admin/support/tickets/*', async (route) => {
+    const body = route.request().postDataJSON();
+    assert.equal(body.status, 'resolved');
+    assert(body.resolution.length >= 5);
+    fixture.support.tickets[0].status = 'resolved';
+    fixture.support.tickets[0].resolution_summary = body.resolution;
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ data: { ticket_id: fixture.support.tickets[0].id, changed: true } }),
+    });
+  });
+  await admin.getByLabel('Status', { exact: true }).selectOption('resolved');
+  await admin
+    .getByLabel('Resolution notes')
+    .fill('Corrected the appointment filter and verified the booking list.');
+  await admin.getByRole('button', { name: 'Save ticket update' }).click();
+  await expect(admin.getByRole('dialog').locator('.detail-status')).toContainText('Resolved');
   await admin.keyboard.press('Escape');
   await admin.unroute('**/api/admin/activity');
   await admin.route('**/api/admin/activity', (route) =>

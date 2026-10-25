@@ -1,4 +1,34 @@
 {
+  "meetings": [
+    {
+      "id": "90000000-0000-4000-8000-000000000010",
+      "code": "MEET-EXAMPLE-01",
+      "title": "Website discovery call",
+      "requested_start_at": "2027-01-20T10:00:00Z",
+      "duration_minutes": 30,
+      "timezone": "Asia/Kolkata",
+      "status": "confirmed",
+      "provider": "google",
+      "provider_event_id": "fixture-calendar-event",
+      "inquiry_id": "30000000-0000-4000-8000-000000000001",
+      "project_id": null,
+      "employees": { "full_name": "Example consultant" }
+    },
+    {
+      "id": "90000000-0000-4000-8000-000000000011",
+      "code": "MEET-EXAMPLE-02",
+      "title": "Product consultation request",
+      "requested_start_at": "2027-01-21T10:00:00Z",
+      "duration_minutes": 30,
+      "timezone": "Asia/Kolkata",
+      "status": "requested",
+      "provider": null,
+      "provider_event_id": null,
+      "inquiry_id": null,
+      "project_id": null,
+      "employees": { "full_name": "Example consultant" }
+    }
+  ],
   "calls": [
     {
       "id": "10000000-0000-4000-8000-000000000001",
@@ -6,6 +36,9 @@
       "status": "completed",
       "record_source": "provider",
       "started_at": "2026-10-24T09:20:00Z",
+      "duration_seconds": 143,
+      "channel": "browser",
+      "direction": "inbound",
       "summary": "Caller discussed an inventory and order workflow for a growing business. Requirements and next steps were collected.",
       "provider_execution_id": "20000000-0000-4000-8000-000000000001"
     },
@@ -127,6 +160,8 @@
   "knowledge": [
     {
       "document_key": "company-overview",
+      "id": "70000000-0000-4000-8000-000000000002",
+      "indexed_passages": 5,
       "version": "1.1",
       "title": "About AsterByte Solutions",
       "approval_status": "approved",
@@ -136,6 +171,8 @@
     },
     {
       "document_key": "services-pricing",
+      "id": "70000000-0000-4000-8000-000000000001",
+      "indexed_passages": 6,
       "version": "1.1",
       "title": "Services, pricing and delivery",
       "approval_status": "approved",
@@ -145,6 +182,8 @@
     },
     {
       "document_key": "team-expertise",
+      "id": "70000000-0000-4000-8000-000000000003",
+      "indexed_passages": 5,
       "version": "1.1",
       "title": "Teams and expertise",
       "approval_status": "approved",
@@ -154,6 +193,8 @@
     },
     {
       "document_key": "case-studies",
+      "id": "70000000-0000-4000-8000-000000000004",
+      "indexed_passages": 7,
       "version": "1.1",
       "title": "Client case studies",
       "approval_status": "approved",
@@ -163,6 +204,8 @@
     },
     {
       "document_key": "clinic-system-guide",
+      "id": "70000000-0000-4000-8000-000000000005",
+      "indexed_passages": 7,
       "version": "1.1",
       "title": "ClinicFlow support guide",
       "approval_status": "approved",
@@ -172,6 +215,8 @@
     },
     {
       "document_key": "sales-crm-guide",
+      "id": "70000000-0000-4000-8000-000000000006",
+      "indexed_passages": 7,
       "version": "1.1",
       "title": "LeadBridge support guide",
       "approval_status": "approved",
@@ -181,6 +226,8 @@
     },
     {
       "document_key": "support-policies",
+      "id": "70000000-0000-4000-8000-000000000007",
+      "indexed_passages": 6,
       "version": "1.1",
       "title": "Support policies",
       "approval_status": "approved",

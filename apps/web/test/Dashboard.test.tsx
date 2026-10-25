@@ -18,6 +18,18 @@ const state = {
   signOut: vi.fn(async () => {}),
   access: 'ready' as const,
   refresh: vi.fn(),
+  updateTicket: vi.fn(() => Promise.resolve()),
+  retrySupportEmail: vi.fn(() => Promise.resolve()),
+  loadKnowledge: vi.fn(() =>
+    Promise.resolve({
+      id: '70000000-0000-4000-8000-000000000001',
+      title: 'Services',
+      version: '1.1',
+      document_key: 'services-pricing',
+      content_markdown: '# Services\n\nApproved company services.',
+      content_sha256: 'a'.repeat(64),
+    }),
+  ),
 };
 beforeEach(() => {
   hook.mockReturnValue(state);
@@ -34,8 +46,12 @@ describe('administrator operations workspace', () => {
   });
   it('labels bounded counts and polling rather than global metrics or live transcripts', () => {
     render(<Dashboard />);
-    expect(screen.getByText(/Counts describe the loaded snapshot only/)).toBeInTheDocument();
-    expect(screen.getByText(/Polling updates, not a live transcript stream/)).toBeInTheDocument();
+    expect(screen.queryByText('YOUR OPERATIONS WORKSPACE')).not.toBeInTheDocument();
+    expect(screen.getByText('Recent Calls')).toBeInTheDocument();
+    expect(screen.getByText('Last 30 calls')).toBeInTheDocument();
+    expect(screen.getByText('Potential Leads')).toBeInTheDocument();
+    expect(screen.getByText('Pending Tickets')).toBeInTheDocument();
+    expect(screen.getByText('Upcoming Meetings')).toBeInTheDocument();
     expect(screen.getByText(/Last refreshed/)).toBeInTheDocument();
   });
   it('filters loaded calls by source and status and shows recoverable empty results', async () => {
@@ -51,13 +67,13 @@ describe('administrator operations workspace', () => {
   it('inspects available summaries/extractions without inferring a matching inquiry link', async () => {
     const user = userEvent.setup();
     render(<Dashboard />);
-    await user.click(screen.getByRole('button', { name: /Caller discussed an inventory/ }));
+    await user.click(screen.getByRole('button', { name: /20000000-0000-4000-8000-000000000001/ }));
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByText('caller@example.invalid')).toBeInTheDocument();
+    expect(within(dialog).getByText('No linked inquiry in recent records.')).toBeInTheDocument();
     expect(
-      within(dialog).getByText('No stored inquiry link in this snapshot.'),
+      within(dialog).getByText('As reported by the caller · not verified'),
     ).toBeInTheDocument();
-    expect(within(dialog).getByText('Caller-provided / unverified')).toBeInTheDocument();
     await user.click(within(dialog).getByRole('button', { name: 'Close details' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
@@ -77,7 +93,7 @@ describe('administrator operations workspace', () => {
     expect(screen.getByLabelText('Filter by status')).toHaveValue('failed');
     expect(screen.getByRole('heading', { name: 'No matching calls' })).toBeInTheDocument();
     await user.selectOptions(screen.getByLabelText('Filter by status'), 'all');
-    expect(screen.getByText('CALL-BROWSER-EXAMPLE')).toBeInTheDocument();
+    expect(screen.getByText('20000000-0000-4000-8000-000000000001')).toBeInTheDocument();
   });
   it('shows source/version evidence for actual tool source IDs', async () => {
     const user = userEvent.setup();
@@ -97,10 +113,8 @@ describe('administrator operations workspace', () => {
   it('shows only real stored inquiry-call links and unverified intake details', async () => {
     const user = userEvent.setup();
     render(<Dashboard />);
-    await user.click(screen.getByRole('button', { name: /INCOMING INQUIRY.*Inventory/ }));
-    expect(
-      within(screen.getByRole('dialog')).getByText('No stored call association.'),
-    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /VOICE INQUIRY.*Inventory/ }));
+    expect(within(screen.getByRole('dialog')).getByText('No linked call.')).toBeInTheDocument();
   });
   it('provides refresh, stale, expired and forbidden states without displaying private rows after denial', async () => {
     hook.mockReturnValue({
@@ -131,7 +145,40 @@ describe('administrator operations workspace', () => {
       }),
     });
     render(<Dashboard />);
-    expect(screen.getByText('No calls in this snapshot')).toBeInTheDocument();
-    expect(screen.getByText('No inquiries yet')).toBeInTheDocument();
+    expect(screen.getByText('No calls yet')).toBeInTheDocument();
+    expect(screen.getByText('No open leads')).toBeInTheDocument();
+  });
+  it('opens a call from the row, shows full IDs with real duration and keeps summaries in the panel', async () => {
+    const user = userEvent.setup();
+    render(<Dashboard />);
+    await user.click(within(screen.getByRole('navigation')).getByRole('button', { name: 'Calls' }));
+    expect(screen.getByText('20000000-0000-4000-8000-000000000001')).toHaveAttribute(
+      'title',
+      '20000000-0000-4000-8000-000000000001',
+    );
+    expect(screen.queryByText(dashboardFixture.calls[0]?.summary ?? '')).not.toBeInTheDocument();
+    await user.click(screen.getByText('2:23'));
+    expect(screen.getByRole('dialog')).toHaveTextContent('Caller discussed an inventory');
+  });
+  it('separates requested meetings from confirmed upcoming appointments', async () => {
+    const user = userEvent.setup();
+    render(<Dashboard />);
+    const card = screen.getByRole('button', { name: /Upcoming Meetings/ });
+    expect(card).toHaveTextContent('1 awaiting confirmation');
+    await user.click(card);
+    await user.click(screen.getByText('Product consultation request'));
+    expect(screen.getByRole('dialog')).toHaveTextContent('Awaiting confirmation — not booked yet');
+  });
+  it('loads actual document text on demand inside the knowledge detail', async () => {
+    const user = userEvent.setup();
+    render(<Dashboard />);
+    await user.click(
+      within(screen.getByRole('navigation')).getByRole('button', { name: 'Knowledge status' }),
+    );
+    await user.click(screen.getByRole('button', { name: /Services, pricing and delivery/ }));
+    expect(await screen.findByText('Approved company services.')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Download Markdown' }),
+    ).toBeEnabled();
   });
 });
