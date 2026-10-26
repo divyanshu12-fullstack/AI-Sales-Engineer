@@ -135,7 +135,11 @@ try {
   for (const width of [320, 390, 768, 1024, 1440, 1920]) {
     await page.setViewportSize({ width, height: width < 600 ? 900 : 1000 });
     await page.goto(url);
-    await expect(page.getByRole('heading', { name: /Your next chapter/ })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /Software that helps your business grow/ }),
+    ).toBeVisible();
+    await expect(page.locator('.project-card')).toHaveCount(3);
+    await expect(page.locator('.header-talk')).toHaveAttribute('href', '/demo');
     await page.evaluate(() => globalThis.document.fonts.ready);
     await expect(
       page.getByRole('button', { name: 'Start a conversation', exact: true }),
@@ -153,15 +157,67 @@ try {
       await screenshot(page, 'public-mobile.png');
       await page.getByRole('button', { name: 'Open navigation' }).click();
       await expect(page.getByRole('navigation', { name: 'Mobile navigation' })).toBeVisible();
+      await expect(
+        page
+          .getByRole('navigation', { name: 'Mobile navigation' })
+          .getByRole('link', { name: 'Project Demo' }),
+      ).toHaveAttribute('href', '/demo');
       await page.keyboard.press('Escape');
       await expect(page.getByRole('navigation', { name: 'Mobile navigation' })).toHaveCount(0);
     }
+    if (width === 390 || width === 1440) {
+      await page.locator('#work').scrollIntoViewIfNeeded();
+      await expect(page.locator('.floating-talk')).toBeVisible();
+      await page.locator('.floating-talk').click();
+      await expect(page.locator('.voice-panel')).toBeInViewport();
+    }
+  }
+  for (const width of [320, 390, 768, 1024, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.goto(`${url}/demo`);
+    await expect(
+      page.getByRole('heading', { name: 'AI sales & customer support representative' }),
+    ).toBeVisible();
+    await expect(page.locator('.project-test')).toHaveCount(3);
+    await expect(page.locator('.voice-panel')).toHaveCount(1);
+    await expect(page.getByRole('button', { name: 'Pitch video coming soon' })).toBeDisabled();
+    await expect(page.getByRole('link', { name: 'Open admin dashboard' })).toHaveAttribute(
+      'href',
+      '/admin',
+    );
+    await page.evaluate(() => globalThis.document.fonts.ready);
+    await noOverflow(page, width, 'project-demo');
+    if (width === 390) await screenshot(page, 'project-demo-mobile.png');
+    if (width === 1440) {
+      await screenshot(page, 'project-demo-desktop.png');
+      await screenshot(page, 'project-demo-hero.png', false);
+    }
+    await page.getByRole('tab', { name: 'Returning customer' }).click();
+    await expect(page.getByRole('tabpanel')).toContainText(
+      'Help an existing customer report a problem',
+    );
+    if (width === 1440) await screenshot(page, 'project-demo-support-workflow.png', false);
+    await page.getByRole('tab', { name: 'New customer' }).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('tabpanel')).toContainText('Ask permission to take it further');
+    await page.getByRole('tab', { name: 'New customer' }).focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByRole('tab', { name: 'Returning customer' })).toBeFocused();
+    await page.keyboard.press('Home');
+    await expect(page.getByRole('tab', { name: 'New customer' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await page.locator('.project-test').nth(1).locator('summary').click();
+    await expect(page.locator('.project-test').nth(1)).toContainText(
+      'fictional contact with email sending disabled',
+    );
   }
   assert.equal(sessions, 0, 'Rendering or resizing must not mint sessions');
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(url);
   await page.getByText('Will I own the source code?', { exact: true }).click();
-  await expect(page.getByText(/Client-specific custom code belongs to you/)).toBeVisible();
+  await expect(page.getByText(/Your custom code is handed over/)).toBeVisible();
   await page.route('**/api/voice/session', (route) =>
     route.fulfill({
       status: 503,

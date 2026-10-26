@@ -35,5 +35,5 @@ export const App = () =>
       <Dashboard />
     </Suspense>
   ) : (
-    <PublicSite />
+    <PublicSite demo={window.location.pathname.replace(/\/$/, '') === '/demo'} />
   );

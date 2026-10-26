@@ -128,8 +128,14 @@ try {
   const page = await waitFor(webUrl, web);
   const html = await page.text();
   assert(
-    html.includes('<title>AsterByte Solutions | Thoughtful software. Practical outcomes.</title>'),
+    html.includes('<title>AsterByte Solutions | Websites, CRMs &amp; Custom Software</title>') ||
+      html.includes('<title>AsterByte Solutions | Websites, CRMs & Custom Software</title>'),
   );
+  for (const path of ['/demo', '/admin']) {
+    const route = await fetch(`${webUrl}${path}`);
+    assert.equal(route.status, 200, `${path} must load directly`);
+    assert((await route.text()).includes('<div id="root"></div>'));
+  }
   const scripts = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)];
   const entry = scripts.find(([, path]) => path !== '/@vite/client')?.[1];
   assert(entry, 'The web page must reference a JavaScript entry point.');

@@ -1,65 +1,74 @@
-// Public presentation only. Curated from approved v1.1 knowledge Markdown; never import company-data.json.
-export const services = [
-  {
-    name: 'Business websites',
-    category: 'Web',
-    description:
-      'A clear, responsive home for your business. Up to five pages and an inquiry form.',
-    price: '₹15,000–35,000',
-    timing: '1–2 weeks',
-    icon: 'web',
-  },
-  {
-    name: 'Full-stack products',
-    category: 'Product',
-    description:
-      'Turn your first release into working software, with sign-in, roles and up to three core workflows.',
-    price: '₹80,000–2,00,000',
-    timing: '4–8 weeks',
-    icon: 'product',
-  },
-  {
-    name: 'CRMs & business tools',
-    category: 'Operations',
-    description:
-      'Bring leads, tasks, permissions and everyday reporting into one useful application.',
-    price: '₹70,000–1,80,000',
-    timing: '4–8 weeks',
-    icon: 'business',
-  },
-  {
-    name: 'Workflow automation',
-    category: 'Automation',
-    description:
-      'Less copying between tools. One well-defined workflow connecting up to two existing systems.',
-    price: '₹15,000–50,000',
-    timing: '1–3 weeks',
-    icon: 'automation',
-  },
-  {
-    name: 'Practical AI',
-    category: 'AI',
-    description:
-      'An assistant or document-search pilot built around one approved knowledge collection and one channel.',
-    price: '₹35,000–1,00,000',
-    timing: '2–5 weeks',
-    icon: 'ai',
-  },
-  {
-    name: 'API integrations',
-    category: 'Integrations',
-    description:
-      'Connect one documented API to an agreed workflow, with clear handling when something fails.',
-    price: '₹10,000–35,000',
-    timing: '1–2 weeks',
-    icon: 'integration',
-  },
-] as const;
+// Public presentation only; never import company-data.json.
+// Focused starter estimates sit within the approved broader service ranges, not historical project costs.
+export const services = (
+  [
+    {
+      name: 'Business websites',
+      category: 'Web',
+      description:
+        'Help customers find your business, understand your services and send an enquiry. Includes up to five responsive pages.',
+      price: '₹15,000–25,000',
+      startingPrice: 15000,
+      timing: '1–2 weeks',
+      icon: 'web',
+    },
+    {
+      name: 'Custom web applications',
+      category: 'Product',
+      description:
+        'Launch a first version of your product with user accounts, an admin area and the essential features your customers need.',
+      price: '₹80,000–1,50,000',
+      startingPrice: 80000,
+      timing: '4–8 weeks',
+      icon: 'product',
+    },
+    {
+      name: 'CRMs & business tools',
+      category: 'Operations',
+      description:
+        'Keep customer enquiries, sales follow-ups and team tasks in one place instead of scattered spreadsheets and messages.',
+      price: '₹70,000–1,20,000',
+      startingPrice: 70000,
+      timing: '4–8 weeks',
+      icon: 'business',
+    },
+    {
+      name: 'Workflow automation',
+      category: 'Automation',
+      description:
+        'Stop entering the same information twice. Automatically move records, update reports or route requests between two tools.',
+      price: '₹15,000–30,000',
+      startingPrice: 15000,
+      timing: '1–3 weeks',
+      icon: 'automation',
+    },
+    {
+      name: 'AI assistants & search',
+      category: 'AI',
+      description:
+        'Help customers get answers or help staff find information in your documents. Start with one use case and a reviewed knowledge base.',
+      price: '₹35,000–60,000',
+      startingPrice: 35000,
+      timing: '2–5 weeks',
+      icon: 'ai',
+    },
+    {
+      name: 'API integrations',
+      category: 'Integrations',
+      description:
+        'Connect your website or business software to an existing service so information reaches the team that needs it.',
+      price: '₹10,000–20,000',
+      startingPrice: 10000,
+      timing: '1–2 weeks',
+      icon: 'integration',
+    },
+  ] as const
+).toSorted((a, b) => a.startingPrice - b.startingPrice);
 export const additionalPricing = [
   [
     'Content-managed website',
     'Up to 12 pages, editable content and basic analytics',
-    '₹35,000–75,000',
+    '₹35,000–55,000',
     '2–4 weeks',
   ],
   [
@@ -83,94 +92,96 @@ export const additionalPricing = [
 ];
 export const projects = [
   {
+    name: 'FormPilot',
+    category: 'Form automation',
+    client: 'NextStep Career Services',
+    illustration: 'forms',
+    startingPrice: 15000,
+    headline: 'Fill application forms without starting from scratch.',
+    problem: 'Candidates were typing the same personal details into every application form.',
+    solution:
+      'A browser extension fills supported fields from a saved profile and remembers corrections. Candidates review personal answers before submitting.',
+    outcome: 'Routine details can be reused, while candidates stay in control of what they submit.',
+    tags: ['Browser extension', 'Saved profiles', 'Form filling'],
+  },
+  {
+    name: 'LeadBridge',
+    category: 'CRM & sales management',
+    client: 'BrightPath Services',
+    illustration: 'crm',
+    startingPrice: 70000,
+    headline: 'Know who owns each lead and what happens next.',
+    problem:
+      'A sales team needed one place to manage enquiries, follow-ups and progress towards a sale.',
+    solution:
+      'A custom CRM with lead ownership, follow-up tasks, conversation notes and a shared sales pipeline.',
+    outcome:
+      'Sales staff can see their next actions. Managers can review the pipeline without collecting separate updates.',
+    tags: ['Lead tracking', 'Follow-up tasks', 'Sales reports'],
+  },
+  {
     name: 'DispatchPro',
     category: 'Logistics · Business application',
     client: 'SwiftRoute Logistics',
     illustration: 'dispatch',
-    headline: 'One delivery. One shared record.',
+    startingPrice: 80000,
+    headline: 'Manage deliveries from booking to doorstep.',
     problem:
       'Delivery requests, courier assignments and status updates were scattered across manual processes.',
     solution:
-      'A multi-role logistics application with consistent pricing, courier assignment, tracking and OTP delivery confirmation.',
+      'One application for customers, couriers and operations staff, with delivery quotes, courier assignments, tracking and OTP confirmation.',
     outcome:
-      'Customers, couriers and administrators work from a shared delivery record, with clearer operational handoffs.',
+      'Customers can follow deliveries, couriers know their assignments and operations staff can manage exceptions in one system.',
     tags: ['Web application', 'Workflow design', 'Integrations'],
   },
-  {
-    name: 'FormPilot',
-    category: 'Automation · Browser extension',
-    client: 'NextStep Career Services',
-    illustration: 'forms',
-    headline: 'Repeat the process. Not the typing.',
-    problem: 'Candidates repeatedly entered the same details into placement and application forms.',
-    solution:
-      'A browser extension matches supported fields to a saved profile and reusable corrections, with AI-assisted drafts for review.',
-    outcome:
-      'Less repeated entry, reusable corrections and a clear review step for answers that need personal judgment.',
-    tags: ['Automation', 'Chrome extension', 'Human review'],
-  },
-  {
-    name: 'Draftly',
-    category: 'AI · Editorial workflow',
-    client: 'Blueframe Digital',
-    illustration: 'editorial',
-    headline: 'AI-assisted content. Human-approved.',
-    problem:
-      'A marketing team needed a repeatable way to turn briefs into content while preserving brand rules.',
-    solution:
-      'A coordinated research, writing and brand-checking workflow where editors inspect, edit, reject or retry drafts.',
-    outcome:
-      'Consistent review steps and clearer handoffs, with human approval before publication.',
-    tags: ['AI workflows', 'Content tools', 'Review interface'],
-  },
-] as const;
+].sort((a, b) => a.startingPrice - b.startingPrice);
 export const process = [
   {
-    title: 'Understand what matters.',
-    body: 'We start with your people, your current process and the problem worth solving. A complete specification is not required.',
+    title: 'Tell us what needs to improve',
+    body: 'Show us how your team works today, where time is being lost and what you want to change. You do not need a technical brief.',
   },
   {
-    title: 'Shape the first release.',
-    body: 'Agree the essential workflows, scope, assumptions and acceptance criteria. Your proposal confirms the price and schedule.',
+    title: 'Agree on the work and budget',
+    body: 'We suggest an approach, explain the trade-offs and put the features, cost and delivery plan in a proposal for your approval.',
   },
   {
-    title: 'Build it together.',
-    body: 'Review designs and working demonstrations at agreed milestones. Test the real workflows before acceptance.',
+    title: 'Review the software as we build',
+    body: 'You see working versions at agreed stages, give feedback and test the tasks your team will actually use.',
   },
   {
-    title: 'Hand over. Stay supported.',
-    body: 'Receive your custom source code, setup instructions and a walkthrough. Qualifying development bugs are fixed free for the product’s lifetime.',
+    title: 'Launch with help from our team',
+    body: 'We hand over your custom source code, setup instructions and a walkthrough. Qualifying bugs in the delivered code are covered for the product’s lifetime.',
   },
 ];
 export const faqs = [
   {
     question: 'Do I need a technical specification to get started?',
     answer:
-      'No. Start with the business problem, who uses the process and what you want to improve. We help define the smallest useful first release, including the workflows, budget and constraints that matter.',
+      'No. Tell us what your business does, what is not working and who will use the software. We will help you work out the features, budget and next steps.',
   },
   {
     question: 'Will I own the source code?',
     answer:
-      'Client-specific custom code belongs to you under the project terms and is handed over after agreed payments are complete. Pre-existing reusable tools and third-party components keep their own ownership and licenses. You also receive agreed setup instructions, documentation and a handover session.',
+      'Yes. Your custom code is handed over after the agreed payments are complete, with setup instructions and a walkthrough. Existing reusable tools and third-party components keep their own licences.',
   },
   {
     question: 'How many revisions are included?',
     answer:
-      'Websites include two consolidated revision rounds and up to six hours of small refinements within 90 days of handover. Business apps, MVPs and AI pilots include three rounds and up to twelve refinement hours within 90 days. Revisions stay within the agreed scope; new features are estimated separately. Bug fixes do not consume these allowances.',
+      'Websites include two feedback rounds, plus up to six hours of small changes within 90 days of handover. Business apps and AI pilots include three rounds and up to twelve hours. These cover changes within the agreed scope; new features are quoted separately. Bug fixes do not use up your revision allowance.',
   },
   {
     question: 'What does “lifetime development bug fixes” mean?',
     answer:
-      'We correct reproducible defects in our delivered custom code that fail the written acceptance criteria in the supported environment, free for the lifetime of that delivered product. No maintenance subscription is required. New features, changed requirements, third-party changes, provider outages and infrastructure charges are excluded. Lifetime coverage does not mean immediate or 24/7 staffing.',
+      'If our delivered code does not do what the written scope says it should, we fix qualifying bugs for the lifetime of that product. You do not need a maintenance subscription for this. New features, third-party changes, hosting costs and provider outages are separate. This is not a promise of instant or 24/7 support.',
   },
   {
     question: 'Are these fixed prices and delivery promises?',
     answer:
-      'The prices are indicative first-release budgets in INR, not binding quotations. Final scope, dependencies, schedule and payment terms are confirmed in your proposal. Hosting, domains, subscriptions, AI usage and applicable taxes are extra unless included. Build time begins after scope approval, initial payment and required content or access.',
+      'These are estimates for smaller starter projects, not fixed quotes. More features or complex integrations can cost more. We confirm the scope, price and schedule in a proposal before work starts. Hosting, domains, subscriptions, AI usage and taxes are extra unless included.',
   },
   {
     question: 'What happens when I start a voice conversation?',
     answer:
-      'You speak with our AI representative in your browser. Ask about services or explain a project idea. If you choose to leave a project inquiry, the representative should confirm your requirements and contact details before saving them. A conversation is not a booking or a delivery commitment. Please do not share passwords, OTPs or sensitive records.',
+      'You speak with our AI representative in your browser. Ask about our services, explain an idea or report a product issue. It confirms your details before saving a request. Speaking to the representative does not book a meeting or commit you to a project. Please do not share passwords, OTPs or sensitive records.',
   },
 ];

@@ -18,11 +18,22 @@ explicitly limited to fictional-data intake, not production customer identity ve
 The owner has successfully tested support tickets and acknowledgement/resolution emails. The October 26
 update improves post-ticket closing, suppresses unsolicited ticket references, restyles transactional
 emails and simplifies `/admin`. The same agent's webhook and all four tool URLs now use
-`https://alexander-tenant-impressed-utilization.trycloudflare.com`; voice, model, summaries, extractions
+`https://alarm-draft-carlo-lincoln.trycloudflare.com`; voice, model, summaries, extractions
 and bearer credentials are preserved. A synthetic closing-only call ended remotely; the audible single
 goodbye and contextual post-ticket flow still need human acceptance. See [frontend setup and previews](docs/frontend.md)
 and [support setup](docs/support-workflow.md). Calendar booking/new-customer automation remain deferred;
 Meetings only reads existing future records.
+
+The landing page now focuses on consultancy services and three client projects (FormPilot, LeadBridge
+CRM and DispatchPro), ordered by a comparable starter budget. Service estimates use smaller starter
+packages within the broader approved ranges. **Project Demo** in the navigation opens `/demo`: a plain-language
+project walkthrough with switchable new/returning-customer flows, the Bolna speech-to-text → LLM →
+text-to-speech architecture, three test scenarios and administrator access instructions. It explains
+why immediate sales/support conversations matter and labels automated video-call scheduling as planned.
+The call panel and scrolling call shortcut remain; extra landing-page call invitations were removed.
+Add the published pitch-video URL to `apps/web/src/features/demo/content.ts` when ready. Until then the
+video button is clearly disabled, not linked to an invented video. Administrator credentials are never
+published on the public guide; reviewer access must be supplied by the owner.
 
 ## Read before changing code
 
@@ -70,6 +81,7 @@ npm.cmd run dev
 ```
 
 - React: <http://127.0.0.1:5173>
+- Project demo and testing guide: <http://127.0.0.1:5173/demo>
 - Protected operations dashboard: <http://127.0.0.1:5173/admin>
 - Express: <http://127.0.0.1:3001>
 - The contracts package compiles before startup and then watches for changes.

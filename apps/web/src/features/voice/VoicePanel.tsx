@@ -19,9 +19,9 @@ export const VoicePanel = ({ call }: { call: VoiceCall }) => {
   const busy = ['permission', 'connecting', 'connected'].includes(call.phase);
   const connected = call.phase === 'connected';
   const labels = {
-    idle: 'A good place to start.',
+    idle: 'How can we help you?',
     permission: 'Allow your microphone.',
-    connecting: 'Making the connection.',
+    connecting: 'Connecting your call…',
     connected: call.muted ? 'Your microphone is muted.' : 'You’re connected.',
     ended: 'Thanks for the conversation.',
     failed: 'Let’s try that again.',
@@ -67,14 +67,14 @@ export const VoicePanel = ({ call }: { call: VoiceCall }) => {
             ? `${formatDuration(call.elapsed)} · ${call.level > 0.035 ? 'AI audio detected' : call.muted ? 'Microphone off' : 'Microphone on'}`
             : busy
               ? 'ONE MOMENT'
-              : 'NO FORMS. JUST A CONVERSATION.'}
+              : 'ASK A QUESTION OR TELL US WHAT YOU NEED'}
         </p>
         <h2 id="voice-heading" aria-live="polite">
           {labels[call.phase]}
         </h2>
         <p>
           {call.phase === 'idle'
-            ? 'Tell us what you’re working on. Explore an idea, understand the options, or ask about our services.'
+            ? 'Ask about our services, describe a project you want to build, or get help with an existing product.'
             : call.phase === 'permission'
               ? 'Your browser will ask to use your microphone. Choose Allow to continue.'
               : call.phase === 'connecting'
@@ -82,8 +82,8 @@ export const VoicePanel = ({ call }: { call: VoiceCall }) => {
                 : connected
                   ? 'Speak naturally. You’re talking with our AI representative. You can pause or end the call at any time.'
                   : call.phase === 'ended'
-                    ? `${call.elapsed ? `${formatDuration(call.elapsed)} on the call. ` : ''}Any saved inquiry will have its own confirmed reference. You can start a new conversation below.`
-                    : 'No need to re-enter anything. Check the message below before retrying.'}
+                    ? `${call.elapsed ? `${formatDuration(call.elapsed)} on the call. ` : ''}Your call has ended. If a request was saved, our team can review it in the dashboard.`
+                    : 'Check the message below, then try again when you are ready.'}
         </p>
       </div>
       {call.error && (
