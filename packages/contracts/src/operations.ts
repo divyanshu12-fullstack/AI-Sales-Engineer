@@ -47,6 +47,95 @@ export const inquiryResultSchema = z.strictObject({
   duplicate: z.boolean(),
   identity_status: z.literal('unverified'),
 });
+const optionalEmail = z.union([z.email().max(254), z.literal('')]).default('');
+export const consultationSlotSchema = z.strictObject({
+  start_at: z.iso.datetime({ offset: true }),
+  display: z.string().min(3),
+  consultant_id: z.uuid(),
+  consultant_name: z.string().min(2),
+});
+export type ConsultationSlot = z.infer<typeof consultationSlotSchema>;
+export const consultationAvailabilityInputSchema = z.strictObject({
+  topic: z.string().trim().min(5).max(600),
+  preferred_date: z.union([z.iso.date(), z.literal('')]).default(''),
+  preferred_period: z.enum(['any', 'morning', 'afternoon']).default('any'),
+});
+export const consultationAvailabilityResultSchema = z.strictObject({
+  status: z.enum(['available', 'unavailable']),
+  timezone: z.literal('Asia/Kolkata'),
+  duration_minutes: z.literal(30),
+  slots: z.array(consultationSlotSchema),
+});
+export const consultationInputSchema = z.strictObject({
+  submission_key: z
+    .string()
+    .trim()
+    .min(8)
+    .max(120)
+    .regex(/^[a-zA-Z0-9_-]+$/),
+  inquiry_reference: z
+    .string()
+    .trim()
+    .regex(/^INQ-[0-9a-fA-F-]{36}$/),
+  consultant_id: z.uuid(),
+  start_at: z.iso.datetime({ offset: true }),
+  topic: z.string().trim().min(5).max(600),
+  confirmed: z.literal('yes'),
+  email: optionalEmail,
+  notes: z.string().trim().max(1000).default(''),
+});
+export type ConsultationInput = z.infer<typeof consultationInputSchema>;
+export const consultationResultSchema = z.discriminatedUnion('status', [
+  z.strictObject({
+    status: z.literal('scheduled'),
+    meeting_id: z.uuid(),
+    reference: z.string(),
+    inquiry_reference: z.string(),
+    start_at: z.iso.datetime({ offset: true }),
+    display: z.string(),
+    duration_minutes: z.literal(30),
+    timezone: z.literal('Asia/Kolkata'),
+    consultant_name: z.string(),
+    duplicate: z.boolean(),
+    confirmation: z.literal('pending'),
+    email_status: z.enum(['accepted', 'queued', 'failed']),
+  }),
+  z.strictObject({
+    status: z.literal('email_required'),
+    inquiry_reference: z.string(),
+  }),
+  z.strictObject({
+    status: z.literal('slot_unavailable'),
+    slots: z.array(consultationSlotSchema),
+  }),
+]);
+export type Consultation = z.infer<typeof consultationResultSchema>;
+export const meetingConfirmationResultSchema = z.discriminatedUnion('status', [
+  z.object({
+    status: z.literal('pending'),
+    reference: z.string(),
+    title: z.string(),
+    start_at: z.string(),
+    duration_minutes: z.number().int().positive(),
+    timezone: z.string(),
+    consultant_name: z.string(),
+    expires_at: z.string().nullable(),
+  }),
+  z.object({
+    status: z.literal('confirmed'),
+    reference: z.string(),
+    title: z.string(),
+    start_at: z.string(),
+    duration_minutes: z.number().int().positive(),
+    timezone: z.string(),
+    consultant_name: z.string(),
+    already_confirmed: z.boolean().optional(),
+  }),
+  z.object({ status: z.literal('expired'), reference: z.string() }),
+  z.object({ status: z.literal('unavailable'), reference: z.string() }),
+  z.object({ status: z.literal('invalid') }),
+]);
+export type MeetingConfirmation = z.infer<typeof meetingConfirmationResultSchema>;
 export const dashboardSchema = z.strictObject({
   meetings: z
     .array(
@@ -62,6 +151,10 @@ export const dashboardSchema = z.strictObject({
         provider_event_id: z.string().nullable(),
         inquiry_id: z.uuid().nullable(),
         project_id: z.uuid().nullable(),
+        confirmation_expires_at: z.string().nullable().default(null),
+        confirmation_expired: z.boolean().default(false),
+        confirmation_sent_at: z.string().nullable().default(null),
+        confirmed_at: z.string().nullable().default(null),
         employees: z.object({ full_name: z.string() }).nullable().default(null),
       }),
     )

@@ -27,6 +27,22 @@
       "inquiry_id": null,
       "project_id": null,
       "employees": { "full_name": "Example consultant" }
+    },
+    {
+      "id": "90000000-0000-4000-8000-000000000012",
+      "code": "MTG-EXAMPLE-03",
+      "title": "CRM workflow consultation",
+      "requested_start_at": "2027-01-22T10:00:00Z",
+      "duration_minutes": 30,
+      "timezone": "Asia/Kolkata",
+      "status": "pending_confirmation",
+      "provider": null,
+      "provider_event_id": null,
+      "inquiry_id": "30000000-0000-4000-8000-000000000001",
+      "project_id": null,
+      "confirmation_expires_at": "2027-01-29T10:00:00Z",
+      "confirmed_at": null,
+      "employees": { "full_name": "Meera Kapoor" }
     }
   ],
   "calls": [

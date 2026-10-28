@@ -71,7 +71,7 @@ export const CustomerJourneys = () => {
           <p>{journey.outcome}</p>
         </div>
         <div className="project-planned">
-          <strong>Video-call handoff · planned</strong>
+          <strong>Current boundary</strong>
           <p>{journey.next}</p>
         </div>
       </div>

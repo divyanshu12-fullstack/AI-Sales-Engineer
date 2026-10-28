@@ -124,7 +124,7 @@ export const WorkspaceViews = ({
             {
               title: 'Upcoming Meetings',
               value: scheduled.length,
-              detail: `${data.meetings.filter((m) => m.status === 'requested').length} awaiting confirmation · next 30 records`,
+              detail: `${data.meetings.filter((m) => ['requested', 'pending_confirmation'].includes(m.status)).length} awaiting confirmation · next 30 records`,
               icon: CalendarDays,
               target: 'meetings' as View,
             },

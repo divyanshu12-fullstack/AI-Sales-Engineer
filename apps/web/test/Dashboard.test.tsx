@@ -54,6 +54,22 @@ describe('administrator operations workspace', () => {
     expect(screen.getByText('Upcoming Meetings')).toBeInTheDocument();
     expect(screen.getByText(/Last refreshed/)).toBeInTheDocument();
   });
+  it('shows a reserved consultation as pending until the customer confirms by email', async () => {
+    const user = userEvent.setup();
+    render(<Dashboard />);
+    await user.click(
+      within(screen.getByRole('navigation')).getByRole('button', { name: 'Meetings' }),
+    );
+    await user.click(screen.getByRole('button', { name: 'CRM workflow consultation' }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Pending Confirmation')).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        'Confirmation pending — slot reserved until the customer confirms by email',
+      ),
+    ).toBeInTheDocument();
+    expect(within(dialog).queryByText(/Calendar reference/)).not.toBeInTheDocument();
+  });
   it('filters loaded calls by source and status and shows recoverable empty results', async () => {
     const user = userEvent.setup();
     render(<Dashboard />);
@@ -164,7 +180,7 @@ describe('administrator operations workspace', () => {
     const user = userEvent.setup();
     render(<Dashboard />);
     const card = screen.getByRole('button', { name: /Upcoming Meetings/ });
-    expect(card).toHaveTextContent('1 awaiting confirmation');
+    expect(card).toHaveTextContent('2 awaiting confirmation');
     await user.click(card);
     await user.click(screen.getByText('Product consultation request'));
     expect(screen.getByRole('dialog')).toHaveTextContent('Awaiting confirmation — not booked yet');

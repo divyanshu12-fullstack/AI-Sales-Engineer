@@ -324,12 +324,30 @@ export const RecordDetails = ({
               {meeting.status === 'requested' && (
                 <span>Awaiting confirmation — not booked yet</span>
               )}
+              {meeting.status === 'pending_confirmation' && (
+                <span>
+                  {meeting.confirmation_expired
+                    ? 'Confirmation link expired — this slot is available again'
+                    : 'Confirmation pending — slot reserved until the customer confirms by email'}
+                </span>
+              )}
+              {meeting.status === 'confirmed' && meeting.provider === 'customer_confirmation' && (
+                <span>Confirmed by the customer through the emailed link</span>
+              )}
             </div>
             <dl>
               <Field name="When">{time(meeting.requested_start_at)}</Field>
               <Field name="Meeting timezone">{meeting.timezone}</Field>
               <Field name="Duration">{meeting.duration_minutes} minutes</Field>
               <Field name="Host">{meeting.employees?.full_name ?? 'Unassigned'}</Field>
+              {meeting.confirmation_sent_at && (
+                <Field name="Confirmation email accepted">
+                  {time(meeting.confirmation_sent_at)}
+                </Field>
+              )}
+              {meeting.status === 'pending_confirmation' && !meeting.confirmation_sent_at && (
+                <Field name="Confirmation email">Provider acceptance not recorded</Field>
+              )}
               {meeting.inquiry_id && (
                 <Field name="Project inquiry">
                   {link(
@@ -341,10 +359,13 @@ export const RecordDetails = ({
                 </Field>
               )}
               <Field name="Reference">{meeting.code}</Field>
-              {meeting.provider_event_id && (
+              {meeting.provider_event_id && meeting.provider !== 'customer_confirmation' && (
                 <Field name="Calendar reference">
                   {meeting.provider} · {meeting.provider_event_id}
                 </Field>
+              )}
+              {meeting.status === 'confirmed' && meeting.confirmed_at && (
+                <Field name="Customer confirmed">{time(meeting.confirmed_at)}</Field>
               )}
             </dl>
           </>

@@ -8,28 +8,28 @@ The responsive website presents approved company services/pricing, case studies 
 unnamed AI voice representative. `/admin` provides Overview, Calls, Project inquiries, Tools & activity
 and Knowledge status, plus Support tickets and Meetings, using the existing protected API and in-memory
 administrator sign-in. Overview highlights recent calls, potential leads, pending tickets and confirmed
-upcoming appointments. Requested meetings are shown separately, not represented as bookings.
+upcoming meetings; pending-confirmation reservations are shown separately from confirmed meetings.
 
 The support iteration adds **Support tickets**, four-digit demo project/customer codes, real ticket
 intake and administrator resolution with queued Resend notifications. See [support setup](docs/support-workflow.md)
 and the owner-run [demo customer SQL](supabase/examples/create_demo_support_customer.sql). Short codes are
 explicitly limited to fictional-data intake, not production customer identity verification.
 
-The owner has successfully tested support tickets and acknowledgement/resolution emails. The October 26
-update improves post-ticket closing, suppresses unsolicited ticket references, restyles transactional
-emails and simplifies `/admin`. The same agent's webhook and all four tool URLs now use
-`https://alarm-draft-carlo-lincoln.trycloudflare.com`; voice, model, summaries, extractions
-and bearer credentials are preserved. A synthetic closing-only call ended remotely; the audible single
-goodbye and contextual post-ticket flow still need human acceptance. See [frontend setup and previews](docs/frontend.md)
-and [support setup](docs/support-workflow.md). Calendar booking/new-customer automation remain deferred;
-Meetings only reads existing future records.
+The owner has successfully tested support tickets and acknowledgement/resolution emails. The October 28
+consultation update adds employee-matched availability, consent-based slot reservation and a customer
+email confirmation link. The existing Bolna agent now has six backend tools on the current tunnel
+`https://improve-occupation-priorities-grid.trycloudflare.com`; voice, model, summaries, extractions and
+bearer credentials were preserved on read-back. New meetings remain pending until the customer confirms.
+Google Calendar event creation and Google Meet links are still deferred. See [frontend setup and previews](docs/frontend.md)
+and [support setup](docs/support-workflow.md).
 
 The landing page now focuses on consultancy services and three client projects (FormPilot, LeadBridge
 CRM and DispatchPro), ordered by a comparable starter budget. Service estimates use smaller starter
 packages within the broader approved ranges. **Project Demo** in the navigation opens `/demo`: a plain-language
 project walkthrough with switchable new/returning-customer flows, the Bolna speech-to-text → LLM →
 text-to-speech architecture, three test scenarios and administrator access instructions. It explains
-why immediate sales/support conversations matter and labels automated video-call scheduling as planned.
+why immediate sales/support conversations matter and separates live slot reservation from the planned
+Google Calendar/Meet integration.
 The call panel and scrolling call shortcut remain; extra landing-page call invitations were removed.
 Add the published pitch-video URL to `apps/web/src/features/demo/content.ts` when ready. Until then the
 video button is clearly disabled, not linked to an invented video. Administrator credentials are never

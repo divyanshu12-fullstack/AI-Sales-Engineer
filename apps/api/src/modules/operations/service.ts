@@ -160,7 +160,7 @@ export class Operations {
         'integration_jobs?select=id,status,attempts,last_error_code,provider_message_id,created_at,payload&job_type=eq.send_email&dedupe_key=like.support:*&order=created_at.desc&limit=80',
       ),
       this.database.request(
-        `meetings?select=id,code,title,requested_start_at,duration_minutes,timezone,status,provider,provider_event_id,inquiry_id,project_id,employees(full_name)&status=in.(requested,confirmed)&requested_start_at=gte.${encodeURIComponent(new Date().toISOString())}&order=requested_start_at&limit=30`,
+        `meetings?select=id,code,title,requested_start_at,duration_minutes,timezone,status,provider,provider_event_id,inquiry_id,project_id,confirmation_expires_at,confirmation_sent_at,confirmed_at,employees(full_name)&status=in.(requested,pending_confirmation,confirmed)&requested_start_at=gte.${encodeURIComponent(new Date().toISOString())}&order=requested_start_at&limit=30`,
       ),
       this.database.request('knowledge_chunks?select=document_id&limit=1000'),
     ]);
@@ -176,6 +176,17 @@ export class Operations {
           .passthrough(),
       )
       .parse(calls);
+    const meetingRows = z
+      .array(
+        z
+          .object({
+            status: z.string(),
+            confirmation_expires_at: z.string().nullable(),
+          })
+          .passthrough(),
+      )
+      .parse(meetings);
+    const checkedAt = Date.now();
     const chunks = z.array(z.object({ document_id: z.uuid() })).parse(chunkRows);
     const documents = z.array(z.object({ id: z.uuid().optional() }).passthrough()).parse(knowledge);
     const snapshot = dashboardSchema.parse({
@@ -191,7 +202,13 @@ export class Operations {
         ...doc,
         indexed_passages: chunks.filter((chunk) => chunk.document_id === doc.id).length,
       })),
-      meetings,
+      meetings: meetingRows.map((meeting) => ({
+        ...meeting,
+        confirmation_expired:
+          meeting.status === 'pending_confirmation' &&
+          meeting.confirmation_expires_at !== null &&
+          Date.parse(meeting.confirmation_expires_at) <= checkedAt,
+      })),
       support: supportDashboardSchema.parse({ tickets, emails }),
     });
     const sourceIds = [...new Set(snapshot.tools.flatMap((tool) => tool.source_ids))].slice(0, 160);

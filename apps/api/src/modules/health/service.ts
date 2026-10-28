@@ -12,7 +12,16 @@ const requirements: { id: IntegrationId; variables: (keyof Env)[] }[] = [
   },
   { id: 'llm', variables: ['LLM_PROVIDER', 'LLM_API_KEY', 'LLM_MODEL'] },
   { id: 'embeddings', variables: ['EMBEDDING_PROVIDER', 'EMBEDDING_API_KEY', 'EMBEDDING_MODEL'] },
-  { id: 'calendar', variables: ['CALENDAR_PROVIDER', 'CALCOM_API_KEY', 'CALCOM_EVENT_TYPE_ID'] },
+  {
+    id: 'calendar',
+    variables: [
+      'CALENDAR_PROVIDER',
+      'GOOGLE_SERVICE_ACCOUNT_EMAIL',
+      'GOOGLE_PRIVATE_KEY',
+      'GOOGLE_CALENDAR_ID',
+      'GOOGLE_CALENDAR_TIMEZONE',
+    ],
+  },
   { id: 'resend', variables: ['RESEND_API_KEY', 'RESEND_FROM_EMAIL'] },
   { id: 'public_callbacks', variables: ['PUBLIC_API_BASE_URL'] },
 ];

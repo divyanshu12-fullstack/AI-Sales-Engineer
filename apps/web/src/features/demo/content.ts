@@ -46,10 +46,14 @@ export const customerJourneys = [
         title: 'Ask permission to take it further',
         body: 'If the customer wants to continue, confirm the requirements and contact details, then save a project enquiry for the team. A general question does not need to become a lead.',
       },
+      {
+        title: 'Offer a real consultation slot',
+        body: 'With permission, check the team’s actual availability and offer only real times. The customer chooses a slot; the agent reserves it and sends a confirmation link to the email on the enquiry.',
+      },
     ],
     outcome:
-      'The team receives a project enquiry with the customer’s requirements and contact details. After the call is processed, staff can also read its summary.',
-    next: 'With the customer’s permission, the intended next step is to arrange a video call with the right team member to discuss the project. Automatic scheduling is planned; the current demo saves the enquiry for human follow-up.',
+      'The team receives a project enquiry and, when the customer agrees, a reserved consultation slot. The meeting stays “confirmation pending” until the customer confirms through the emailed link.',
+    next: 'Email confirmation is implemented. Google Calendar event creation and a Google Meet link are planned as the next integration; the demo does not claim either exists yet.',
   },
   {
     id: 'support',
@@ -94,10 +98,11 @@ export const scenarios = [
       'Start a call and describe the problem in your own words. Let the representative ask about the details it needs.',
       'Ask what a first version could include. You can mention a budget, team size or target date if you have one.',
       'Ask it to save your enquiry. Give a test name and an email or phone you are comfortable using, then confirm the details.',
+      'If you want a consultation, choose one of the real slots offered. A confirmation link is emailed; the dashboard remains pending until you confirm it.',
     ],
     result:
-      'A project inquiry is saved for the team to review. In the dashboard, look under Project inquiries. After the call is processed, Calls shows its summary and available extracted details.',
-    note: 'This flow saves an enquiry today. Consultant matching, automatic meeting booking and proposal emails are planned next steps—not completed actions in this demo.',
+      'The project inquiry appears under Project inquiries. An agreed consultation appears under Meetings as pending confirmation until the customer confirms the email link. After the call is processed, Calls shows its summary and available extracted details.',
+    note: 'Use an email inbox you control if you choose to test email confirmation. Google Calendar event creation and Google Meet links are not implemented yet.',
   },
   {
     number: '02',

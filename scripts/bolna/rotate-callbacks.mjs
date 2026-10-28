@@ -41,8 +41,8 @@ const next = structuredClone(before);
 const tools = next.tasks
   .flatMap((task) => Object.values(task.tools_config?.api_tools?.tools_params ?? {}))
   .filter((tool) => new URL(tool.url).pathname.startsWith('/api/bolna/tools/'));
-if (tools.length !== 4)
-  throw new Error('Expected four existing backend tools; inspect before updating.');
+if (tools.length !== 6)
+  throw new Error('Expected six existing backend tools; inspect before updating.');
 for (const tool of tools) {
   const url = new URL(tool.url);
   tool.url = new URL(url.pathname + url.search, config.PUBLIC_API_BASE_URL).href;

@@ -55,11 +55,11 @@ export const DemoContent = ({
           </div>
           <div>
             <dt>What you can try today</dt>
-            <dd>Company questions, project enquiries and support tickets</dd>
+            <dd>Company questions, project enquiries, consultation slots and support tickets</dd>
           </div>
           <div>
-            <dt>What we are building towards</dt>
-            <dd>A permission-based video-call handoff to the team</dd>
+            <dt>What is not integrated yet</dt>
+            <dd>Google Calendar events and Google Meet links</dd>
           </div>
         </dl>
         <div className="project-pitch">

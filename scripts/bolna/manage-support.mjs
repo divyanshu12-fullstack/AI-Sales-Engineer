@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { loadEnvironment } from '../../apps/api/src/config/env.ts';
 import { supportTools } from './support-tools.mjs';
+import { consultationTools } from './consultation-tools.mjs';
 
 const config = loadEnvironment();
 if (
@@ -27,7 +28,11 @@ const tasks = structuredClone(before.tasks);
 if (tasks.length !== 1 || tasks[0].task_type !== 'conversation')
   throw new Error('Unexpected task layout; manual review required.');
 const api = tasks[0].tools_config.api_tools;
-for (const t of supportTools(config.PUBLIC_API_BASE_URL, config.BOLNA_TOOL_AUTH_TOKEN)) {
+const desiredTools = [
+  ...supportTools(config.PUBLIC_API_BASE_URL, config.BOLNA_TOOL_AUTH_TOKEN),
+  ...consultationTools(config.PUBLIC_API_BASE_URL, config.BOLNA_TOOL_AUTH_TOKEN),
+];
+for (const t of desiredTools) {
   api.tools = api.tools.filter((t0) => t0.name !== t.definition.name);
   api.tools.push(t.definition);
   api.tools_params[t.definition.name] = t.configuration;
@@ -110,6 +115,8 @@ console.log(
       changes: [
         'Support-first intent routing without a forced initial classification',
         'Natural issue intake and real ticket/email tool outcomes',
+        'Consented consultation availability and slot reservation tools',
+        'Consultation confirmation email with a pending-until-confirmed meeting state',
         'Unnamed English/Hinglish representative',
         'Rich-text and fallback prompts kept in sync',
         'Working recognizer retained; Bolna does not accept nova-3 multi on this account',
@@ -122,7 +129,12 @@ console.log(
   ),
 );
 if (process.argv.includes('--apply')) {
-  for (const path of ['lookup-support-project', 'create-support-ticket']) {
+  for (const path of [
+    'lookup-support-project',
+    'create-support-ticket',
+    'check-consultation-availability',
+    'schedule-consultation',
+  ]) {
     const r = await fetch(`${config.PUBLIC_API_BASE_URL}/api/bolna/tools/${path}`, {
       method: 'POST',
       headers: {
@@ -134,7 +146,7 @@ if (process.argv.includes('--apply')) {
     });
     if (r.status !== 400)
       throw new Error(
-        `New support endpoint is not ready: ${path} HTTP ${r.status}. Agent unchanged.`,
+        `New backend tool endpoint is not ready: ${path} HTTP ${r.status}. Agent unchanged.`,
       );
   }
   const directory = new URL('../../supabase/.temp/', import.meta.url);
@@ -177,9 +189,8 @@ if (process.argv.includes('--apply')) {
       fingerprint(preserved(before)) === fingerprint(preserved(after)),
     richPromptUpdated: after.composition_by_language?.en?.[0]?.text === prompt,
     fallbackPromptUpdated: after.agent_prompts?.task_1?.system_prompt === prompt,
-    toolsPresent: supportTools(config.PUBLIC_API_BASE_URL, config.BOLNA_TOOL_AUTH_TOKEN).every(
-      (t) =>
-        after.tasks[0].tools_config.api_tools.tools.some((t0) => t0.name === t.definition.name),
+    toolsPresent: desiredTools.every((t) =>
+      after.tasks[0].tools_config.api_tools.tools.some((t0) => t0.name === t.definition.name),
     ),
     callbackUrlsUpdated:
       after.webhook_url === `${config.PUBLIC_API_BASE_URL}/api/bolna/webhooks/executions` &&

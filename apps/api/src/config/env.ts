@@ -46,12 +46,18 @@ const envSchema = z.object({
   EMBEDDING_PROVIDER: optionalText,
   EMBEDDING_API_KEY: optionalText,
   EMBEDDING_MODEL: optionalText,
-  CALENDAR_PROVIDER: z.literal('calcom').optional(),
-  CALCOM_API_KEY: optionalText,
-  CALCOM_EVENT_TYPE_ID: z.coerce.number().int().positive().optional(),
+  CALENDAR_PROVIDER: z.literal('google').optional(),
+  // Reserved for the planned Google Calendar adapter. Not used by the current API.
+  GOOGLE_SERVICE_ACCOUNT_EMAIL: z.email().optional(),
+  GOOGLE_PRIVATE_KEY: optionalText,
+  GOOGLE_CALENDAR_ID: optionalText,
+  GOOGLE_CALENDAR_TIMEZONE: optionalText,
   RESEND_API_KEY: optionalText,
   RESEND_FROM_EMAIL: z.email().optional(),
   SUPPORT_EMAIL_WORKER_ENABLED: z.enum(['true', 'false']).default('true'),
+  // Optional key separation for deterministic email-confirmation links; falls back to the
+  // server-only Supabase secret. Rotating it invalidates previously emailed links.
+  MEETING_CONFIRMATION_SECRET: optionalSecret,
   PUBLIC_API_BASE_URL: originSchema
     .refine((value) => value.startsWith('https://'), 'Public callbacks require HTTPS.')
     .optional(),

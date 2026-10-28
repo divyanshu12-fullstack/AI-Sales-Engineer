@@ -82,7 +82,7 @@ describe('public consultancy website', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Consultant matching, automatic meeting booking and proposal emails are planned/,
+        /Google Calendar event creation and Google Meet links are not implemented yet/,
       ),
     ).toBeInTheDocument();
     expect(screen.getByText(/fictional contact with email sending disabled/)).toBeInTheDocument();
@@ -121,7 +121,7 @@ describe('public consultancy website', () => {
     expect(screen.getByRole('tabpanel')).toHaveTextContent('Automatic support-call scheduling');
     await user.keyboard('{Home}');
     expect(sales).toHaveFocus();
-    expect(screen.getByRole('tabpanel')).toHaveTextContent('Automatic scheduling is planned');
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('Email confirmation is implemented');
     await user.tab();
     expect(screen.getByRole('tabpanel')).toHaveFocus();
     expect(start).not.toHaveBeenCalled();
