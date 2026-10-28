@@ -89,7 +89,7 @@ try {
   let webPort = await getFreePort();
   while (webPort === apiPort) webPort = await getFreePort();
   const apiUrl = `http://127.0.0.1:${apiPort}`;
-  const webUrl = `http://127.0.0.1:${webPort}`;
+  const webUrl = development ? `http://127.0.0.1:${webPort}` : apiUrl;
   const api = start(
     'API',
     development ? ['--import', 'tsx', 'apps/api/src/server.ts'] : ['apps/api/dist/server.js'],
@@ -102,20 +102,14 @@ try {
       SUPPORT_EMAIL_WORKER_ENABLED: 'false',
     },
   );
-  const web = start(
-    'Web',
-    [
-      viteCli,
-      ...(development ? [] : ['preview']),
-      '--host',
-      '127.0.0.1',
-      '--port',
-      String(webPort),
-      '--strictPort',
-    ],
-    { PORT: String(apiPort), NODE_ENV: development ? 'development' : 'production' },
-    webRoot,
-  );
+  const web = development
+    ? start(
+        'Web',
+        [viteCli, '--host', '127.0.0.1', '--port', String(webPort), '--strictPort'],
+        { PORT: String(apiPort), NODE_ENV: 'development' },
+        webRoot,
+      )
+    : undefined;
 
   const live = await waitFor(`${apiUrl}/api/health/live`, api);
   livenessResponseSchema.parse(await live.json());
@@ -125,7 +119,8 @@ try {
   const readiness = readinessResponseSchema.parse(await ready.json());
   assert(readiness.data.integrations.every(({ status }) => status === 'unavailable'));
 
-  const page = await waitFor(webUrl, web);
+  const page = development ? await waitFor(webUrl, web) : await fetch(webUrl);
+  assert.equal(page.status, 200, 'The combined service must serve the frontend at /');
   const html = await page.text();
   assert(
     html.includes('<title>AsterByte Solutions | Websites, CRMs &amp; Custom Software</title>') ||
@@ -136,6 +131,10 @@ try {
     assert.equal(route.status, 200, `${path} must load directly`);
     assert((await route.text()).includes('<div id="root"></div>'));
   }
+  const unknownApi = await fetch(`${webUrl}/api/not-a-real-endpoint`);
+  assert.equal(unknownApi.status, 404, 'Unknown API paths must stay API errors');
+  assert.match(unknownApi.headers.get('content-type') ?? '', /application\/json/);
+  assert(!(await unknownApi.text()).includes('<div id="root"></div>'));
   const scripts = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)];
   const entry = scripts.find(([, path]) => path !== '/@vite/client')?.[1];
   assert(entry, 'The web page must reference a JavaScript entry point.');
@@ -148,7 +147,7 @@ try {
   livenessResponseSchema.parse(await proxy.json());
 
   console.log(
-    `PASS: ${development ? 'development' : 'built'} API and web startup, health contracts, unavailable integrations, JavaScript asset and API proxy.`,
+    `PASS: ${development ? 'development API/web proxy' : 'combined production API/frontend'} startup, health contracts, SPA routes, API errors and JavaScript asset.`,
   );
 } catch (error) {
   console.error(error instanceof Error ? error.message : 'Smoke test failed.');

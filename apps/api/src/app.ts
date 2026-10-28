@@ -2,6 +2,9 @@ import cors from 'cors';
 import express from 'express';
 import { rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
+import { existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { Logger } from 'pino';
 import type { Env } from './config/env.js';
 import { createErrorHandler, errorBody, HttpError } from './http/errors.js';
@@ -15,9 +18,27 @@ import { consultationsRouter } from './modules/consultations/router.js';
 export const createApp = (config: Env, logger: Logger) => {
   const app = express();
   app.disable('x-powered-by');
-  app.set('trust proxy', false);
+  // App Service terminates TLS at one trusted front-end proxy. Trust only that hop so
+  // rate limiting uses the caller address without accepting arbitrary forwarded chains.
+  app.set('trust proxy', config.NODE_ENV === 'production' ? 1 : false);
   app.use(createRequestContext(logger));
-  app.use(helmet());
+  const connectSources = ["'self'", 'https://api.bolna.ai', 'wss://webcall.bolna.ai'];
+  if (config.SUPABASE_URL) {
+    const supabaseOrigin = new URL(config.SUPABASE_URL);
+    connectSources.push(supabaseOrigin.origin);
+    supabaseOrigin.protocol = supabaseOrigin.protocol === 'https:' ? 'wss:' : 'ws:';
+    connectSources.push(supabaseOrigin.origin);
+  }
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+          'connect-src': connectSources,
+        },
+      },
+    }),
+  );
   app.use(
     cors({
       origin: (origin, callback) => {
@@ -67,6 +88,28 @@ export const createApp = (config: Env, logger: Logger) => {
   app.get('/api/health/ready', (_request, response) => {
     response.status(503).json(getReadiness(config));
   });
+
+  if (config.NODE_ENV === 'production') {
+    const frontendDirectory = resolve(dirname(fileURLToPath(import.meta.url)), '../../web/dist');
+    const indexFile = resolve(frontendDirectory, 'index.html');
+    if (existsSync(indexFile)) {
+      app.use(express.static(frontendDirectory, { index: false, fallthrough: true }));
+      app.use((request, response, next) => {
+        if (
+          (request.method !== 'GET' && request.method !== 'HEAD') ||
+          request.path === '/api' ||
+          request.path.startsWith('/api/') ||
+          !request.accepts('html')
+        ) {
+          next();
+          return;
+        }
+        response.sendFile(indexFile, (error) => {
+          if (error) next(error);
+        });
+      });
+    }
+  }
 
   app.use((_request, response) => {
     response

@@ -25,6 +25,17 @@ describe('foundation HTTP API', () => {
     expect(response.headers['cache-control']).toBe('no-store');
   });
 
+  it('allows only the required Bolna and configured Supabase connection origins in CSP', async () => {
+    const app = makeApp({ SUPABASE_URL: 'https://project-ref.supabase.co' });
+    const response = await request(app).get('/api/health/live').expect(200);
+    const policy = response.headers['content-security-policy'] as string;
+    expect(policy).toContain(
+      "connect-src 'self' https://api.bolna.ai wss://webcall.bolna.ai https://project-ref.supabase.co wss://project-ref.supabase.co",
+    );
+    expect(policy).toContain("default-src 'self'");
+    expect(policy).not.toContain('https://*');
+  });
+
   it('reports unavailable integrations rather than fake success', async () => {
     const response = await request(makeApp()).get('/api/health/ready').expect(503);
     const { data } = readinessResponseSchema.parse(response.body);

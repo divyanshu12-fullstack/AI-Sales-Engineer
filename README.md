@@ -1,238 +1,64 @@
-# AsterByte Solutions — AI Consultancy Voice Agent
+# AsterByte Solutions — AI Sales & Customer Support Demo
 
-A voice-first consultancy and customer-support platform built incrementally with React, TypeScript,
-Express, Supabase and Bolna.
+This project is a working voice-agent demo for a software consultancy. A visitor can speak with an AI representative on the public website to ask about services, discuss a possible software project, or report an issue with a demo product. The agent can save a project enquiry or support ticket when the caller asks it to.
 
-**Current scope: public consultancy website, embedded browser calling and operations workspace.**
-The responsive website presents approved company services/pricing, case studies and FAQs, with an
-unnamed AI voice representative. `/admin` provides Overview, Calls, Project inquiries, Tools & activity
-and Knowledge status, plus Support tickets and Meetings, using the existing protected API and in-memory
-administrator sign-in. Overview highlights recent calls, potential leads, pending tickets and confirmed
-upcoming meetings; pending-confirmation reservations are shown separately from confirmed meetings.
+## Try the website
 
-The support iteration adds **Support tickets**, four-digit demo project/customer codes, real ticket
-intake and administrator resolution with queued Resend notifications. See [support setup](docs/support-workflow.md)
-and the owner-run [demo customer SQL](supabase/examples/create_demo_support_customer.sql). Short codes are
-explicitly limited to fictional-data intake, not production customer identity verification.
+- Live website: <https://asterbyte-client-connect-live.azurewebsites.net>
+- Project walkthrough and call scenarios: <https://asterbyte-client-connect-live.azurewebsites.net/demo>
+- Administrator sign-in: <https://asterbyte-client-connect-live.azurewebsites.net/admin>
 
-The owner has successfully tested support tickets and acknowledgement/resolution emails. The October 28
-consultation update adds employee-matched availability, consent-based slot reservation and a customer
-email confirmation link. The existing Bolna agent now has six backend tools on the current tunnel
-`https://improve-occupation-priorities-grid.trycloudflare.com`; voice, model, summaries, extractions and
-bearer credentials were preserved on read-back. New meetings remain pending until the customer confirms.
-Google Calendar event creation and Google Meet links are still deferred. See [frontend setup and previews](docs/frontend.md)
-and [support setup](docs/support-workflow.md).
+The `/demo` page explains the customer journeys, voice stages, sample prompts, expected dashboard results, and current limitations. The live call requires microphone permission. Use test details and do not share passwords or sensitive information. Dashboard access requires administrator credentials from the project owner; there is no public sign-in bypass.
 
-The landing page now focuses on consultancy services and three client projects (FormPilot, LeadBridge
-CRM and DispatchPro), ordered by a comparable starter budget. Service estimates use smaller starter
-packages within the broader approved ranges. **Project Demo** in the navigation opens `/demo`: a plain-language
-project walkthrough with switchable new/returning-customer flows, the Bolna speech-to-text → LLM →
-text-to-speech architecture, three test scenarios and administrator access instructions. It explains
-why immediate sales/support conversations matter and separates live slot reservation from the planned
-Google Calendar/Meet integration.
-The call panel and scrolling call shortcut remain; extra landing-page call invitations were removed.
-Add the published pitch-video URL to `apps/web/src/features/demo/content.ts` when ready. Until then the
-video button is clearly disabled, not linked to an invented video. Administrator credentials are never
-published on the public guide; reviewer access must be supplied by the owner.
+## What the demo does
 
-## Read before changing code
+- **New customer conversations:** answers company questions, helps scope a practical first version, captures a project enquiry with consent, and can offer actual consultation availability. A chosen slot is reserved pending the customer’s email confirmation.
+- **Returning customer support:** accepts issues for the published fictional demo account, can consult reviewed product guidance, and creates support tickets for the team to review. Administrators can record a resolution. Email acknowledgements and resolution updates are sent only for enabled contacts and when email delivery is configured.
+- **Operations dashboard:** authenticated staff can review calls and processed summaries, project enquiries, support tickets, consultation reservations, and backend tool/knowledge activity.
+- **Voice experience:** the browser connects to the Bolna voice service. The configured pipeline uses Deepgram Nova-3 for speech recognition, Gemini 3.6 Flash for language reasoning, and Sarvam for speech generation.
 
-1. [Product requirements](.agents/instructions/system_prompt.md)
-2. [Engineering standards](.agents/instructions/engineering-standards.md)
-3. [WORKLOG.md](WORKLOG.md)
+Google Calendar event creation and Google Meet links are **not implemented**. A consultation confirmation email is not proof of calendar booking or inbox delivery. Demo project/customer codes enable fictional issue intake only; they are not production identity verification and do not grant access to private customer history. See `/demo` for further scope details and expected test outcomes.
 
-The requirements refer to `system.md`, but the supplied file is actually
-`.agents/instructions/system_prompt.md`. The standards also live under `.agents/instructions/`.
-These originals have not been renamed or duplicated.
+## How it is built
 
-## Prerequisites
+- **Website:** React, TypeScript and Vite.
+- **Application API:** Node.js and Express, serving the production website and API from the same Azure Linux App Service.
+- **Data and authentication:** Supabase stores application records and provides administrator sign-in.
+- **Voice:** Bolna orchestrates the browser call and voice pipeline.
+- **Email:** Resend is used for configured support notifications and consultation confirmation.
+- **Shared contracts:** the `packages/contracts` workspace contains shared request and response schemas.
 
-- Node.js **24.18.0 or later within 24.x** (LTS); `.node-version` records the tested version.
-- npm **12.x**, tested with 12.0.1. Use one package manager and the root lockfile.
-- No credentials, Docker or Supabase CLI are required for local application/PGlite tests. Explicit
-  hosted verification requires the existing Supabase configuration or authenticated project-scoped MCP.
+The production app is hosted at `https://asterbyte-client-connect-live.azurewebsites.net`. Supabase, Bolna and Resend are external services. The API health endpoint is `/api/health/live`.
 
-TypeScript 6.0.3 is intentionally used: the selected typescript-eslint version does not support
-TypeScript 7.x. Direct dependency versions are pinned; `package-lock.json` pins transitive versions.
-npm 12 blocks unapproved dependency installation scripts. The esbuild postinstall is explicitly
-disabled: supported platforms receive its native executable through the normal optional dependency.
-Do not use `--omit=optional` or blanket-approve install scripts.
+## Run locally
 
-## Local setup
+Requirements: Node.js 24.x and npm. From the repository root:
 
-Run from the workspace root:
-
-```powershell
-npm.cmd ci
+```sh
+npm ci
+npm run dev
 ```
 
-Configuration is optional for rendering the site; calls and sign-in use the existing server credentials.
-To customize it, create `.env` **only if it does
-not already exist**, then edit it:
+Open the local website at <http://127.0.0.1:5173>, the walkthrough at <http://127.0.0.1:5173/demo>, and the admin sign-in at <http://127.0.0.1:5173/admin>. The development server proxies `/api` requests to Express on port 3001.
 
-```powershell
-if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+The public pages can be viewed without credentials. Live calling, administrator sign-in, persistence, and email require the appropriate server-side configuration. Copy `.env.example` to `.env` only if needed, and never commit `.env` or share its secrets. Do not use real customer information for demo calls.
+
+## Verify changes
+
+```sh
+npm run check
+npm run smoke
+npm run review:frontend
 ```
 
-Start all three workspace watchers:
+`check` runs formatting, lint, type checks, tests, and builds. `smoke` checks the built app and API over HTTP. `review:frontend` runs responsive browser checks and UI scenarios; these checks do not by themselves verify a human voice call, administrator credentials, or delivery to an email inbox.
 
-```powershell
-npm.cmd run dev
-```
-
-- React: <http://127.0.0.1:5173>
-- Project demo and testing guide: <http://127.0.0.1:5173/demo>
-- Protected operations dashboard: <http://127.0.0.1:5173/admin>
-- Express: <http://127.0.0.1:3001>
-- The contracts package compiles before startup and then watches for changes.
-- Vite forwards `/api` requests to Express; browser code uses relative URLs and contains no keys.
-- Stop the development command with **Ctrl+C**.
-
-On macOS/Linux use `npm` instead of `npm.cmd`. Windows instructions use `npm.cmd` to avoid PowerShell
-execution-policy issues with `npm.ps1`.
-
-## Configuration
-
-Copy variable names from [.env.example](.env.example); never commit `.env`. The API reads the root
-`.env` explicitly in source and built modes. Existing process environment variables take precedence.
-Restart after configuration changes. Whitespace-only entries are treated as unset.
-
-| Variable                   | Default / behavior                                                             |
-| -------------------------- | ------------------------------------------------------------------------------ |
-| `NODE_ENV`                 | `development`; also supports `test` and `production`                           |
-| `HOST`                     | `127.0.0.1`; explicitly set `0.0.0.0` only when the host/container requires it |
-| `PORT`                     | `3001`; also determines Vite's local API proxy port                            |
-| `WEB_ORIGIN`               | `http://127.0.0.1:5173`; exact permitted browser origin, no path               |
-| `LOG_LEVEL`                | `info`; JSON logs, with `silent` available for tests                           |
-| `RATE_LIMIT_MAX`           | `120` requests per IP per minute, excluding process liveness                   |
-| `BOLNA_WEB_CALL_ENABLED`   | `true`; set `false` to disable browser session minting                         |
-| `BOLNA_SESSION_RATE_LIMIT` | `3` session attempts per IP per 10 minutes; global process budget 20           |
-| Provider variables         | Optional; see [integration readiness](docs/integration-readiness.md)           |
-
-Invalid supplied values fail startup with **field names only**, never the secret values. Partial or
-missing integration configuration does not prevent the foundation from starting. No credentials are
-tested or transmitted by health checks.
-
-Use `127.0.0.1` consistently: `localhost` is a different browser origin. If you change the frontend
-port, update `WEB_ORIGIN` and pass the matching Vite CLI port. The proxy targets the local API on
-`127.0.0.1`; changing `HOST` must still leave it reachable there.
-
-## Health API
-
-| Endpoint                | Response                                                            | Meaning                                             |
-| ----------------------- | ------------------------------------------------------------------- | --------------------------------------------------- |
-| `GET /api/health/live`  | `200`, `{ "data": { "status": "ok", "service": "asterbyte-api" } }` | API process responds; no business-readiness claim   |
-| `GET /api/health/ready` | `503`, legacy conservative configuration inventory                  | Not an active provider probe or browser call result |
-
-`503` on readiness is **intentional**, not a broken server. Use liveness for a process health probe;
-do not configure restart loops against the intentionally incomplete business-readiness endpoint.
-
-Readiness lists configuration presence, missing variable **names**, and `verification: not_checked`.
-This conservative configuration inventory is separate from real retrieval verification and stored
-activity. It does not dynamically probe providers or claim live voice readiness.
-It never returns keys, email addresses, project URLs or token values. Its shared runtime schema rejects
-fabricated available integrations. API responses have `Cache-Control: no-store` and a generated
-`X-Request-ID`. Errors use `{ "error": { "code", "message", "requestId" } }`.
-
-## Quality and startup checks
-
-```powershell
-npm.cmd run check
-npm.cmd run smoke
-npm.cmd run smoke:dev
-```
-
-- `check`: formatting, typed ESLint, strict type checking, tests and production builds.
-- `smoke`: builds, starts the compiled API and Vite preview on temporary loopback ports, checks real
-  HTTP responses/assets and the proxy, then stops only its own processes.
-- `smoke:dev`: checks the source API and Vite development server with the same HTTP assertions.
-- Smoke tests do not place calls, send emails, access provider accounts or create business records.
-- UI tests use jsdom; smoke tests are HTTP-level, not real-browser or voice end-to-end tests.
-
-```powershell
-npm.cmd run review:frontend
-```
-
-This separate Playwright/installed-Chrome review checks public layouts (320–1920px), dashboard
-interactions, permission/failed-call UI and authorization-denial behavior. Populated dashboard
-screenshots use **controlled test data**, not private hosted records. Screenshots are in
-`artifacts/frontend/`. `-- --live-call` additionally makes one bounded, chargeable real provider call
-with a synthetic browser microphone; do not use it as a load test. See `docs/frontend.md`.
-
-Other commands: `npm.cmd run format`, `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd test`.
-
-Database checks and the optional read-only hosted API check:
-
-```powershell
-npm.cmd run db:validate
-npm.cmd run test:database
-npm.cmd run db:verify:rest
-```
-
-The last command performs only GET requests using local server configuration. It checks project
-scope, denied anonymous access, the company record and seven hosted source hashes without logging keys.
-`npm.cmd run db:seed:sql -- --output supabase/.temp/initial-import.sql` generates a validated UTF-8
-import statement; it does **not** execute it. See the database guide before applying migrations/imports.
-The original importer is frozen developer tooling: it intentionally rejects the later schema/review
-state rather than overwriting approved records. Do not rerun it on the current database.
-
-Current integration commands:
-
-```powershell
-npm.cmd run knowledge:ingest
-npm.cmd run knowledge:verify
-npm.cmd run bolna:config
-```
-
-`knowledge:ingest` validates and resumes approved public chunks; missing chunks use the paid embedding
-API. `knowledge:verify` makes three real authenticated local-backend searches through OpenRouter and
-Supabase and records genuine backend tool checks (not Bolna calls). `bolna:config` writes placeholder-only
-JSON under Git-ignored `supabase/.temp/`, without modifying the agent. Never commit `--private` exports.
-
-For a built API:
-
-```powershell
-npm.cmd run build
-npm.cmd start
-```
-
-`apps/web/dist` is a static frontend build. `npm.cmd run preview --workspace @asterbyte/web` is a
-**local preview**, not a production hosting service. Set `WEB_ORIGIN=http://127.0.0.1:4173` for that
-preview. Production will need static hosting, an HTTPS reverse proxy for `/api`, environment secrets
-and reviewed proxy/network settings; deployment is not implemented in milestone 1.
-
-## Supabase MCP for development
-
-The project-local `opencode.json` configures Supabase's hosted MCP server, scoped to the Supabase
-project identified in the local setup. It currently exposes **database and documentation tools**, with
-writes enabled under the user's milestone 2 authorization. No API key or OAuth token is stored in the
-configuration. This does not authorize unrelated writes, resets, other-project work or deployment.
-
-To authorize it in OpenCode, run `/mcps`, select **supabase**, and complete the browser sign-in for the
-organization containing this project's Supabase project. Check the result with `opencode mcp list`;
-it must say `connected` before the connection is considered verified. The connection and database
-operations were verified for milestone 2. Restore `read_only=true` in the scoped URL when only inspection
-is needed; URL changes can require a new OAuth sign-in. Do not use production data for this setup.
-
-MCP is an internal developer connection, **not the application's runtime database integration**. It
-does not enable application persistence, authentication or change the foundation's readiness status.
-
-## Structure and next milestone
+## Repository layout
 
 ```text
-apps/api/src/          Server lifecycle, protected operations, knowledge, ingestion and voice sessions
-apps/web/src/          Public consultancy site, official browser calling and protected operations UI
-packages/contracts/   Shared Zod request/response contracts and inferred types
-scripts/              Owned-process startup smoke tests and bounded real-browser UI review
-scripts/database/     Source validator, SQL emitter, isolated SQL tests and read-only REST check
-supabase/             Versioned migrations, explicit local config and metadata/access verification SQL
-docs/                 Architecture, integration setup, frontend verification and screenshot provenance
-WORKLOG.md            Chronological progress, verification and unresolved dependencies
+apps/web/              Public website, demo guide, browser calling and admin interface
+apps/api/              Express API and integrations
+packages/contracts/    Shared validation schemas and API types
+supabase/              Database migrations and project SQL
+scripts/               Build, smoke-test and browser-review tooling
 ```
-
-See [integration setup](docs/voice-integration.md) for connecting the prepared tools and webhook after
-choosing a public HTTPS URL. Older setup steps are historical: the owner now reports that those platform
-connections and administrator data work. The current agent-management script preserves their credentials
-and updates callback origins when the tunnel changes. See [frontend guide](docs/frontend.md) for current
-verification and remaining real-device limitations. Private customer tools still require session-bound
-identity/access checks; the support demo's short-code grants allow issue intake only.

@@ -1,0 +1,51 @@
+name: Build and deploy Client Connect
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: azure-client-connect-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+
+      - name: Use the repository's pinned npm version
+        run: npm install --global npm@12.0.1
+
+      - name: Install, test and build
+        run: |
+          npm ci
+          npm run check
+
+      - name: Assemble production-only package
+        run: |
+          npm prune --omit=dev
+          zip -r "$RUNNER_TEMP/client-connect.zip" \
+            package.json package-lock.json node_modules \
+            apps/api/package.json apps/api/dist \
+            apps/web/dist \
+            packages/contracts/package.json packages/contracts/dist
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: asterbyte-client-connect-live
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ${{ runner.temp }}/client-connect.zip

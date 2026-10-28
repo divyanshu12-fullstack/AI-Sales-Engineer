@@ -195,7 +195,7 @@
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
     gap: clamp(38px, 5.5vw, 90px);
     align-items: center;
-    padding-block: 78px 66px;
+    padding-block: 44px 66px;
   }
   .hero h1 {
     margin-top: 24px;
@@ -211,9 +211,9 @@
   .hero-description {
     max-width: 490px;
     margin-top: 27px;
-    font-size: 16px;
-    line-height: 1.85;
-    color: #697069;
+    font-size: 17px;
+    line-height: 1.8;
+    color: #4f5c53;
   }
   .hero-actions {
     display: flex;
@@ -271,8 +271,9 @@
     align-items: center;
     gap: 8px;
     margin-top: 21px;
-    color: #767d73;
-    font-size: 11px;
+    color: #566458;
+    font-size: 12px;
+    line-height: 1.6;
   }
   .note-mark {
     display: inline-flex;
@@ -302,8 +303,8 @@
     letter-spacing: -0.8px;
   }
   .hero-proof span {
-    font-size: 10px;
-    color: #778074;
+    font-size: 12px;
+    color: #566458;
   }
   .hero-voice {
     min-width: 0;
@@ -575,8 +576,8 @@
   }
   .section-heading > p {
     max-width: 300px;
-    color: #737b6e;
-    font-size: 14px;
+    color: #536055;
+    font-size: 15px;
     line-height: 1.85;
   }
   .services-grid {
@@ -620,8 +621,8 @@
     margin-top: 22px;
   }
   .service-item > p {
-    color: #777e71;
-    font-size: 13px;
+    color: #536055;
+    font-size: 14px;
     line-height: 1.8;
     margin-top: 11px;
     min-height: 70px;
@@ -633,7 +634,7 @@
     gap: 10px;
     align-items: center;
     margin-top: 24px;
-    font-size: 11px;
+    font-size: 12px;
   }
   .service-price strong {
     font-size: 13px;
@@ -681,8 +682,8 @@
     font-weight: 550;
   }
   .pricing-note {
-    color: #7b8372;
-    font-size: 11px;
+    color: #536055;
+    font-size: 13px;
     line-height: 1.8;
     margin-top: 19px;
     max-width: 900px;
@@ -764,8 +765,8 @@
     padding-top: 23px;
   }
   .project-category {
-    color: #718068;
-    font-size: 10px;
+    color: #53664f;
+    font-size: 12px;
   }
   .project-copy h3 {
     font-family: var(--font-display);
@@ -776,20 +777,20 @@
     margin-top: 11px;
   }
   .project-client {
-    font-size: 11px;
+    font-size: 12px;
     color: #607159;
     margin-top: 10px;
   }
   .project-budget {
     margin-top: 16px;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.7;
     color: #36583f;
   }
   .project-copy > p:not([class]) {
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.8;
-    color: #76806e;
+    color: #536055;
     margin-top: 17px;
   }
   .project-copy details {
@@ -854,8 +855,8 @@
   }
   .process-grid p {
     margin-top: 12px;
-    color: #7a8172;
-    font-size: 13px;
+    color: #536055;
+    font-size: 14px;
     line-height: 1.9;
   }
   .ownership-note {
@@ -880,9 +881,9 @@
   }
   .ownership-note p {
     margin-top: 7px;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.8;
-    color: #738068;
+    color: #536055;
   }
   .ownership-note a {
     margin-left: auto;
@@ -899,9 +900,9 @@
   }
   .faq-grid > div:first-child > p:not([class]) {
     margin-top: 22px;
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.9;
-    color: #77816f;
+    color: #536055;
     max-width: 300px;
   }
   .faq-grid .text-link {
@@ -925,8 +926,8 @@
   }
   .faq-list p {
     padding: 0 24px 24px 0;
-    font-size: 13px;
-    color: #6a7761;
+    font-size: 14px;
+    color: #4f5c53;
     line-height: 1.95;
   }
   .faq-list summary svg {
@@ -1087,9 +1088,9 @@
     max-width: 760px;
   }
   .project-guide-article p {
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.85;
-    color: #506057;
+    color: #435248;
     margin-top: 15px;
   }
   .project-guide-article .project-kicker {
@@ -1097,7 +1098,7 @@
     margin-top: 0;
   }
   .project-guide-article .project-lead {
-    font-size: 19px;
+    font-size: 20px;
     color: #344b3f;
     line-height: 1.65;
     margin-top: 22px;
@@ -1116,14 +1117,14 @@
   }
   .project-summary dt,
   .project-records dt {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: #374d40;
   }
   .project-summary dd,
   .project-records dd {
     margin: 0;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.8;
     color: #55665a;
   }
@@ -1135,9 +1136,9 @@
     margin-top: 15px;
   }
   .project-pitch small {
-    font-size: 11px;
+    font-size: 13px;
     line-height: 1.7;
-    color: #65736a;
+    color: #4c5c51;
     max-width: 340px;
   }
   .project-pitch-link {
@@ -1180,9 +1181,9 @@
   .project-section ol,
   .project-section ul {
     padding-left: 22px;
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.85;
-    color: #506057;
+    color: #435248;
     margin-block: 18px;
     list-style: decimal;
   }
@@ -1224,8 +1225,8 @@
   }
   .journey-panel blockquote > span {
     display: block;
-    font-size: 10px;
-    color: #6c7d6f;
+    font-size: 12px;
+    color: #4c5c51;
     margin-bottom: 6px;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -1253,7 +1254,7 @@
     margin-top: 2px;
   }
   .journey-steps p {
-    font-size: 14px;
+    font-size: 15px;
     margin-top: 4px;
   }
   .journey-result {
@@ -1264,7 +1265,7 @@
   }
   .journey-result p,
   .project-planned p {
-    font-size: 13px;
+    font-size: 14px;
     margin-top: 6px;
   }
   .project-planned {
@@ -1272,7 +1273,7 @@
     margin-top: 16px;
   }
   .project-planned strong {
-    font-size: 12px;
+    font-size: 13px;
     color: #756039;
   }
   .voice-architecture {
@@ -1283,7 +1284,7 @@
     background: #f8faf7;
   }
   .voice-architecture .architecture-caption {
-    font-size: 11px;
+    font-size: 13px;
     line-height: 1.8;
     margin: 0;
     color: #596d5e;
@@ -1303,7 +1304,7 @@
   }
   .voice-architecture li > span {
     display: block;
-    font-size: 10px;
+    font-size: 12px;
     color: #607663;
     line-height: 1.6;
   }
@@ -1313,7 +1314,7 @@
     margin-top: 7px;
   }
   .voice-architecture li p {
-    font-size: 12px;
+    font-size: 14px;
     margin-top: 7px;
     line-height: 1.8;
   }
@@ -1323,7 +1324,7 @@
   .project-stack table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.8;
   }
   .project-stack caption {
@@ -1350,8 +1351,8 @@
     background: #f4f7f1;
   }
   .project-guide-article .project-small-note {
-    font-size: 12px;
-    color: #66766b;
+    font-size: 14px;
+    color: #4c5c51;
     line-height: 1.8;
   }
   .project-test-list {
@@ -1369,26 +1370,26 @@
     line-height: 1.7;
   }
   .project-test summary > span {
-    font-size: 11px;
-    color: #6a7d6c;
+    font-size: 12px;
+    color: #4c5c51;
   }
   .project-test summary strong {
     font-size: 14px;
     font-weight: 550;
   }
   .project-test summary small {
-    font-size: 11px;
+    font-size: 12px;
     margin-left: auto;
-    color: #607262;
+    color: #4c5c51;
   }
   .project-test > div {
     padding: 0 0 20px;
   }
   .project-test p {
-    font-size: 14px;
+    font-size: 15px;
   }
   .project-test .project-test-note {
-    font-size: 12px;
+    font-size: 14px;
     padding: 13px 16px;
     background: #f4f7f1;
   }
@@ -1397,8 +1398,8 @@
     margin: 30px auto 0;
   }
   .project-call > p {
-    font-size: 11px;
-    color: #697a6d;
+    font-size: 13px;
+    color: #4c5c51;
     line-height: 1.8;
     margin-top: 12px;
   }
@@ -1454,7 +1455,7 @@
     font-size: 17px;
   }
   .project-guide-article p {
-    font-size: 14px;
+    font-size: 15px;
   }
   .project-summary > div,
   .project-records > div {
@@ -2976,7 +2977,7 @@
 }
 @media (min-width: 1600px) {
   .hero {
-    padding-block: 95px 85px;
+    padding-block: 36px 85px;
   }
 }
 @media (max-width: 1100px) {
@@ -2990,7 +2991,7 @@
   .hero {
     gap: 35px;
     grid-template-columns: 1.05fr 1fr;
-    padding-block: 60px;
+    padding-block: 40px;
   }
   .hero-actions {
     gap: 12px;
@@ -3040,7 +3041,7 @@
     grid-template-columns: minmax(0, 1fr);
     max-width: 670px;
     gap: 38px;
-    padding-top: 52px;
+    padding-top: 30px;
   }
   .hero h1 {
     font-size: clamp(46px, 7.7vw, 66px);
@@ -3074,7 +3075,7 @@
   }
   .section-heading > p {
     max-width: 245px;
-    font-size: 13px;
+    font-size: 15px;
   }
   .services-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3175,7 +3176,7 @@
     letter-spacing: 1.2px;
   }
   .hero-description {
-    font-size: 14px;
+    font-size: 16px;
     margin-top: 21px;
     line-height: 1.85;
   }
@@ -3188,7 +3189,7 @@
     gap: 17px;
   }
   .hero-note {
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.6;
   }
   .hero-proof {
@@ -3200,7 +3201,7 @@
     font-size: 25px;
   }
   .hero-proof span {
-    font-size: 9px;
+    font-size: 11px;
   }
   .voice-panel {
     padding: 23px 20px 21px;
@@ -3268,7 +3269,7 @@
   }
   .service-item > p {
     min-height: 0;
-    font-size: 13px;
+    font-size: 14px;
     max-width: 350px;
   }
   .service-item h3 {
