@@ -3,7 +3,8 @@ import { resolve } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import { vector } from '@electric-sql/pglite-pgvector';
 import { beforeAll, afterAll, describe, it, expect } from 'vitest';
-import { buildImportSql, readPack, workspaceRoot } from './pack.js';
+import { buildImportSql, workspaceRoot } from './pack.js';
+import { readTestPack } from './test-pack.js';
 
 describe('demo support transactional boundaries', () => {
   let db: PGlite;
@@ -27,7 +28,7 @@ describe('demo support transactional boundaries', () => {
       '20261023062414_initial_import.sql',
     ])
       await db.exec(await readFile(resolve(workspaceRoot, 'supabase/migrations', name), 'utf8'));
-    await db.exec(buildImportSql((await readPack()).data));
+    await db.exec(buildImportSql(readTestPack()));
     for (const name of [
       '20261023205229_approved_knowledge.sql',
       '20261023205234_voice_operations.sql',

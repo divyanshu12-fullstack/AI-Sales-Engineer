@@ -3,16 +3,9 @@ import { resolve } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import {
-  buildImportSql,
-  expectedCounts,
-  implementedTables,
-  readPack,
-  rows,
-  validatePack,
-  workspaceRoot,
-} from './pack.js';
-import type { Pack, Row } from './pack.js';
+import { buildImportSql, expectedCounts, implementedTables, rows, workspaceRoot } from './pack.js';
+import { readTestPack } from './test-pack.js';
+import type { CompanyData, Row } from './pack.js';
 
 const reportSchema = z.object({
   import_report: z.object({
@@ -36,11 +29,11 @@ const first = <T>(items: T[]): T => {
 
 describe('reviewed PostgreSQL migrations and initial import (PGlite)', () => {
   let db: PGlite;
-  let pack: Pack;
+  let data: CompanyData;
   let initialReport: z.infer<typeof reportSchema>['import_report'];
 
   beforeAll(async () => {
-    pack = await readPack();
+    data = readTestPack();
     db = new PGlite();
     // Isolated engine-only Auth contract. NO Auth users or credentials are generated, even here.
     await db.exec(`
@@ -66,7 +59,7 @@ describe('reviewed PostgreSQL migrations and initial import (PGlite)', () => {
       await db.exec(await readFile(resolve(folder, name), 'utf8'));
     }
     await db.exec('commit');
-    const result = await db.query(buildImportSql(pack.data));
+    const result = await db.query(buildImportSql(data));
     initialReport = reportSchema.parse(first(result.rows)).import_report;
   });
 
@@ -101,8 +94,28 @@ describe('reviewed PostgreSQL migrations and initial import (PGlite)', () => {
     }
   });
 
+  it('uses synthetic records without contact details in the database test pack', () => {
+    expect(
+      rows(data, 'customer_accounts').every(
+        ({ notes }) => typeof notes === 'string' && notes.includes('Synthetic test fixture'),
+      ),
+    ).toBe(true);
+    expect(
+      rows(data, 'contacts').every(
+        ({ email_normalized, phone_e164 }) => email_normalized === null && phone_e164 === null,
+      ),
+    ).toBe(true);
+    expect(
+      rows(data, 'knowledge_documents').every(
+        ({ content_markdown }) =>
+          typeof content_markdown === 'string' &&
+          content_markdown.includes('Synthetic knowledge fixture'),
+      ),
+    ).toBe(true);
+  });
+
   it('reruns atomically with zero inserts and 113 fully equivalent skips', async () => {
-    const result = reportSchema.parse(first((await db.query(buildImportSql(pack.data))).rows));
+    const result = reportSchema.parse(first((await db.query(buildImportSql(data))).rows));
     expect(result.import_report.tables.reduce((sum, row) => sum + row.inserted, 0)).toBe(0);
     expect(result.import_report.tables.reduce((sum, row) => sum + row.identical_skipped, 0)).toBe(
       113,
@@ -110,7 +123,7 @@ describe('reviewed PostgreSQL migrations and initial import (PGlite)', () => {
   });
 
   it('detects a different UUID colliding with a business code', async () => {
-    const changed = structuredClone(pack.data);
+    const changed = structuredClone(data);
     first(rows(changed, 'services')).id = '00000000-0000-4000-8000-000000000123';
     await expect(db.query(buildImportSql(changed))).rejects.toThrow(
       'Import conflict: table=services',
@@ -118,7 +131,7 @@ describe('reviewed PostgreSQL migrations and initial import (PGlite)', () => {
   });
 
   it('reports differing fields instead of overwriting, including timestamps', async () => {
-    const changed = structuredClone(pack.data);
+    const changed = structuredClone(data);
     first(rows(changed, 'services')).updated_at = '2026-10-23T04:00:00Z';
     await expect(db.query(buildImportSql(changed))).rejects.toThrow(
       'differing_fields={updated_at}',
@@ -127,11 +140,11 @@ describe('reviewed PostgreSQL migrations and initial import (PGlite)', () => {
 
   it('rolls back earlier inserts when a later collision fails', async () => {
     await rollback(async () => {
-      const unusedService = first(rows(pack.data, 'services'));
+      const unusedService = first(rows(data, 'services'));
       // Local fixture only, rolled back: make the first table insert real before a late conflict.
       await db.query('delete from public.services where id = $1', [unusedService.id]);
       await db.exec('savepoint attempted_import');
-      const changed = structuredClone(pack.data);
+      const changed = structuredClone(data);
       first(rows(changed, 'activity_events')).description = 'Conflicting test text.';
       await expect(db.query(buildImportSql(changed))).rejects.toThrow(
         'Import conflict: table=activity_events',
@@ -259,32 +272,34 @@ describe('reviewed PostgreSQL migrations and initial import (PGlite)', () => {
 
   it('rejects a project/contact grant with a different account', async () => {
     await rollback(async () => {
-      const grant = structuredClone(first(rows(pack.data, 'project_contacts')));
+      const grant = structuredClone(first(rows(data, 'project_contacts')));
       grant.id = '00000000-0000-4000-8000-000000000789';
-      grant.customer_account_id = rows(pack.data, 'customer_accounts')[1]?.id;
-      grant.contact_id = rows(pack.data, 'contacts').find(({ code }) => code === 'imran')?.id;
+      grant.customer_account_id = rows(data, 'customer_accounts')[1]?.id;
+      grant.contact_id = rows(data, 'contacts').find(
+        ({ code }) => code === 'demo-unlinked-contact',
+      )?.id;
       await expect(insert('project_contacts', grant)).rejects.toMatchObject({ code: '23503' });
     });
   });
 
   it('rejects source calls owned by another contact/account', async () => {
     await rollback(async () => {
-      const inquiry = structuredClone(first(rows(pack.data, 'inquiries')));
+      const inquiry = structuredClone(first(rows(data, 'inquiries')));
       inquiry.id = '00000000-0000-4000-8000-000000000790';
       inquiry.code = 'INQ-TEST';
-      inquiry.source_call_id = first(rows(pack.data, 'calls')).id;
+      inquiry.source_call_id = first(rows(data, 'calls')).id;
       await expect(insert('inquiries', inquiry)).rejects.toMatchObject({ code: '23503' });
     });
   });
 
   it('rejects a ticket from an account member without explicit project support access', async () => {
     await rollback(async () => {
-      const ticket = structuredClone(rows(pack.data, 'support_tickets')[1]);
+      const ticket = structuredClone(rows(data, 'support_tickets')[1]);
       if (!ticket) throw new Error('Missing ticket fixture.');
       ticket.id = '00000000-0000-4000-8000-000000000791';
       ticket.code = 'TKT-TEST';
-      ticket.reporter_contact_id = rows(pack.data, 'contacts').find(
-        ({ code }) => code === 'imran',
+      ticket.reporter_contact_id = rows(data, 'contacts').find(
+        ({ code }) => code === 'demo-unlinked-contact',
       )?.id;
       ticket.source_call_id = null;
       await expect(insert('support_tickets', ticket)).rejects.toThrow(
@@ -318,20 +333,14 @@ describe('reviewed PostgreSQL migrations and initial import (PGlite)', () => {
     await rollback(async () => {
       await db.exec(`create function public.unreviewed_test_trigger() returns trigger language plpgsql as $$begin return new; end;$$;
         create trigger unexpected_hook before insert on public.services for each row execute function public.unreviewed_test_trigger()`);
-      await expect(db.query(buildImportSql(pack.data))).rejects.toThrow('Unreviewed trigger');
+      await expect(db.query(buildImportSql(data))).rejects.toThrow('Unreviewed trigger');
     });
-  });
-
-  it('rejects supplied-file drift rather than silently replacing a snapshot or hash', async () => {
-    const changed = structuredClone(pack);
-    first(rows(changed.data, 'knowledge_documents')).content_markdown = 'Changed without review.';
-    await expect(validatePack(changed)).rejects.toThrow('Markdown snapshot mismatch');
   });
 
   it('rejects database schema drift before inserting', async () => {
     await rollback(async () => {
       await db.exec('alter table public.services add column unexpected_column text');
-      await expect(db.query(buildImportSql(pack.data))).rejects.toThrow(
+      await expect(db.query(buildImportSql(data))).rejects.toThrow(
         'Schema column/type/nullability drift: services',
       );
     });

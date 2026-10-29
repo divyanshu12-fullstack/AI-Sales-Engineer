@@ -3,7 +3,8 @@ import { resolve } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import { vector } from '@electric-sql/pglite-pgvector';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildImportSql, readPack, workspaceRoot } from './pack.js';
+import { buildImportSql, workspaceRoot } from './pack.js';
+import { readTestPack } from './test-pack.js';
 
 const sha = (value: string) => value.repeat(64 / value.length);
 
@@ -59,7 +60,7 @@ describe('consultation scheduling and email confirmation boundaries', () => {
       '20261023062414_initial_import.sql',
     ])
       await db.exec(await readFile(resolve(workspaceRoot, 'supabase/migrations', name), 'utf8'));
-    await db.exec(buildImportSql((await readPack()).data));
+    await db.exec(buildImportSql(readTestPack()));
     for (const name of [
       '20261023205229_approved_knowledge.sql',
       '20261023205234_voice_operations.sql',

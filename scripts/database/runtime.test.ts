@@ -3,7 +3,8 @@ import { resolve } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import { vector } from '@electric-sql/pglite-pgvector';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildImportSql, readPack, workspaceRoot } from './pack.js';
+import { buildImportSql, workspaceRoot } from './pack.js';
+import { readTestPack } from './test-pack.js';
 
 describe('knowledge and voice runtime SQL', () => {
   let db: PGlite;
@@ -21,15 +22,15 @@ describe('knowledge and voice runtime SQL', () => {
       '20261023062414_initial_import.sql',
     ])
       await db.exec(await readFile(resolve(workspaceRoot, 'supabase/migrations', file), 'utf8'));
-    const pack = await readPack();
-    await db.query(buildImportSql(pack.data));
+    const data = readTestPack();
+    await db.query(buildImportSql(data));
     for (const file of [
       '20261023205229_approved_knowledge.sql',
       '20261023205234_voice_operations.sql',
       '20261023210244_intake_provenance.sql',
     ])
       await db.exec(await readFile(resolve(workspaceRoot, 'supabase/migrations', file), 'utf8'));
-    documentId = pack.data.tables.knowledge_documents?.[0]?.id ?? '';
+    documentId = data.tables.knowledge_documents?.[0]?.id ?? '';
   });
   afterAll(async () => {
     await db?.close();
