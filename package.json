@@ -21,7 +21,7 @@
     "build": "npm run build --workspace @asterbyte/contracts && npm run build --workspace @asterbyte/api && npm run build --workspace @asterbyte/web",
     "start": "npm run start --workspace @asterbyte/api",
     "typecheck": "npm run build --workspace @asterbyte/contracts && tsc -p scripts/database/tsconfig.json && npm run typecheck --workspaces --if-present",
-    "lint": "eslint . --max-warnings 0",
+    "lint": "npm run build --workspace @asterbyte/contracts && eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "npm run build --workspace @asterbyte/contracts && npm run test:database && npm run test --workspaces --if-present",
