@@ -136,10 +136,23 @@ export const Dashboard = () => {
                 <ArrowUpRight size={18} />
               </button>
             </form>
-            <p className="login-access-note">
-              For existing administrator accounts only. If you need access, contact the project
-              owner.
-            </p>
+            <aside className="login-demo-access" aria-label="Demo sign-in credentials">
+              <p className="login-demo-access-title">Demo access</p>
+              <dl>
+                <div>
+                  <dt>Email</dt>
+                  <dd>
+                    <code>admin123@gmail.com</code>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Password</dt>
+                  <dd>
+                    <code>Admin@12345</code>
+                  </dd>
+                </div>
+              </dl>
+            </aside>
             <a className="login-mobile-back text-link" href="/">
               <ArrowLeft size={15} /> Back to the website
             </a>

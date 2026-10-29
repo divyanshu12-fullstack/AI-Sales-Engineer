@@ -64,15 +64,14 @@ describe('public consultancy website', () => {
     expect(container.querySelectorAll('a[href="#conversation"]')).toHaveLength(0);
     expect(container).not.toHaveTextContent('Not more technology.');
   });
-  it('opens the demo guide directly with three scenarios and only one voice panel', () => {
+  it('opens the demo guide directly with four scenarios and only one voice panel', () => {
     window.history.replaceState({}, '', '/demo');
     const { container } = render(<App />);
     expect(
       screen.getByRole('heading', { name: 'AI sales & customer support representative' }),
     ).toBeInTheDocument();
-    expect(container.querySelectorAll('.project-test')).toHaveLength(3);
+    expect(container.querySelectorAll('.project-test')).toHaveLength(4);
     expect(container.querySelectorAll('.voice-panel')).toHaveLength(1);
-    expect(screen.getByRole('button', { name: 'Pitch video coming soon' })).toBeDisabled();
     expect(screen.getByRole('link', { name: 'Open admin dashboard' })).toHaveAttribute(
       'href',
       '/admin',
@@ -80,11 +79,10 @@ describe('public consultancy website', () => {
     expect(
       screen.getByText(/Customer\/project codes are not login credentials/),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /Google Calendar event creation and Google Meet links are not implemented yet/,
-      ),
-    ).toBeInTheDocument();
+    expect(container).toHaveTextContent(
+      'Confirm by email to create the Calendar event and Meet link',
+    );
+    expect(container).not.toHaveTextContent('not implemented yet');
     expect(screen.getByText(/fictional contact with email sending disabled/)).toBeInTheDocument();
     expect(
       screen.getAllByText('AsterByte Solutions is a fictional demonstration consultancy.'),
@@ -97,12 +95,13 @@ describe('public consultancy website', () => {
     expect(container).not.toHaveTextContent('The work gets recorded.');
     expect(screen.getByText(/Sending an email can mean waiting days/)).toBeInTheDocument();
     expect(container).toHaveTextContent('Bolna’s orchestration');
-    for (const name of ['Gemini 3.6 Flash', 'Deepgram Nova-3', 'Sarvam']) {
+    for (const name of ['Sarvam Saaras v4', 'Gemini 3.6 Flash', 'Sarvam Bulbul v3']) {
       expect(
         within(screen.getByRole('list', { name: 'Voice processing stages' })).getByText(name),
       ).toBeInTheDocument();
     }
     expect(screen.getByRole('navigation', { name: 'On this page' })).toBeInTheDocument();
+    expect(container).toHaveTextContent('same Shubh voice is used across them');
   });
   it('switches between sales and support walkthroughs with keyboard access without starting a call', async () => {
     window.history.replaceState({}, '', '/demo');
@@ -118,10 +117,12 @@ describe('public consultancy website', () => {
     expect(support).toHaveFocus();
     expect(support).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('tabpanel')).toHaveTextContent('production identity verification');
-    expect(screen.getByRole('tabpanel')).toHaveTextContent('Automatic support-call scheduling');
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('does not schedule support calls');
     await user.keyboard('{Home}');
     expect(sales).toHaveFocus();
-    expect(screen.getByRole('tabpanel')).toHaveTextContent('Email confirmation is implemented');
+    expect(screen.getByRole('tabpanel')).toHaveTextContent(
+      'The reservation starts as confirmation pending',
+    );
     await user.tab();
     expect(screen.getByRole('tabpanel')).toHaveFocus();
     expect(start).not.toHaveBeenCalled();

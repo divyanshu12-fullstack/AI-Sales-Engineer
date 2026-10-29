@@ -39,6 +39,10 @@ describe('administrator operations workspace', () => {
     hook.mockReturnValue({ ...state, signedIn: false, data: null });
     render(<Dashboard />);
     expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
+    expect(screen.getByLabelText('Demo sign-in credentials')).toHaveTextContent(
+      'admin123@gmail.com',
+    );
+    expect(screen.getByLabelText('Demo sign-in credentials')).toHaveTextContent('Admin@12345');
     expect(
       screen.queryByRole('navigation', { name: 'Workspace navigation' }),
     ).not.toBeInTheDocument();

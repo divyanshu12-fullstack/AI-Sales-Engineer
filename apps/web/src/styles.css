@@ -441,6 +441,9 @@
     height: 16px;
     accent-color: #c5dfa4;
   }
+  .voice-consent-copy > span {
+    display: block;
+  }
   .voice-actions {
     display: flex;
     gap: 10px;
@@ -1128,33 +1131,6 @@
     line-height: 1.8;
     color: #55665a;
   }
-  .project-pitch {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px 20px;
-    margin-top: 15px;
-  }
-  .project-pitch small {
-    font-size: 13px;
-    line-height: 1.7;
-    color: #4c5c51;
-    max-width: 340px;
-  }
-  .project-pitch-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    min-height: 44px;
-    font-size: 12px;
-    border: 0;
-    background: none;
-    padding: 8px 0;
-    color: #466351;
-  }
-  .project-pitch-link:disabled {
-    color: #69766e;
-  }
   .project-section {
     border-top: 1px solid #dfe6df;
     margin-top: 38px;
@@ -1264,15 +1240,15 @@
     margin-top: 24px;
   }
   .journey-result p,
-  .project-planned p {
+  .journey-note p {
     font-size: 14px;
     margin-top: 6px;
   }
-  .project-planned {
+  .journey-note {
     padding: 17px 0 0;
     margin-top: 16px;
   }
-  .project-planned strong {
+  .journey-note strong {
     font-size: 13px;
     color: #756039;
   }
@@ -1789,11 +1765,45 @@
   .login-form-wrap .button:disabled {
     opacity: 0.6;
   }
-  .login-access-note {
-    font-size: 11px;
-    line-height: 1.9;
-    color: #7b8473;
+  .login-demo-access {
     margin-top: 22px;
+    padding: 13px 15px;
+    border: 1px solid #d9e2d2;
+    border-radius: 5px;
+    background: #f6f8f3;
+  }
+  .login-demo-access-title {
+    margin: 0 0 9px;
+    color: #4c6747;
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: 0.35px;
+    text-transform: uppercase;
+  }
+  .login-demo-access dl {
+    display: grid;
+    gap: 7px;
+    margin: 0;
+  }
+  .login-demo-access dl > div {
+    display: grid;
+    grid-template-columns: 70px minmax(0, 1fr);
+    align-items: baseline;
+    gap: 8px;
+  }
+  .login-demo-access dt {
+    color: #737d6e;
+    font-size: 11px;
+  }
+  .login-demo-access dd {
+    margin: 0;
+    color: #344333;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+  .login-demo-access code {
+    font-family: var(--font-mono, monospace);
+    font-size: inherit;
   }
   .login-mobile-back {
     display: none;

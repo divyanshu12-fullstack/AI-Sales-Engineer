@@ -59,6 +59,20 @@ describe('foundation HTTP API', () => {
     expect(response.text).not.toContain('demo@example.com');
   });
 
+  it('does not require an API-side LLM model configured in Bolna', async () => {
+    const response = await request(
+      makeApp({ LLM_PROVIDER: 'openrouter', LLM_API_KEY: 'configured-api-key' }),
+    )
+      .get('/api/health/ready')
+      .expect(503);
+    const { data } = readinessResponseSchema.parse(response.body);
+    expect(data.integrations.find(({ id }) => id === 'llm')).toMatchObject({
+      configuration: 'present',
+      verification: 'not_checked',
+      missingVariables: [],
+    });
+  });
+
   it('grants CORS only to the configured web origin without rejecting navigational requests', async () => {
     const app = makeApp();
     const allowed = await request(app)

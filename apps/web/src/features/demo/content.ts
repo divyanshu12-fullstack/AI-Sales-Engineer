@@ -1,10 +1,7 @@
-// Add the owner's published HTTPS pitch-video URL here when it is ready. No invented video link.
-export const pitchVideoUrl: string = '';
-
 // Read-only verified against the existing Bolna agent. Updating this copy does not change the agent.
 export const voiceStack = [
   {
-    name: 'Deepgram Nova-3',
+    name: 'Sarvam Saaras v4',
     role: 'Speech to text',
     description: 'Turns the customer’s speech into text.',
   },
@@ -14,7 +11,7 @@ export const voiceStack = [
     description: 'Understands the request, decides what to ask and uses the available tools.',
   },
   {
-    name: 'Sarvam',
+    name: 'Sarvam Bulbul v3',
     role: 'Text to speech',
     description: 'Turns the agent’s response back into spoken audio.',
   },
@@ -53,7 +50,8 @@ export const customerJourneys = [
     ],
     outcome:
       'The team receives a project enquiry and, when the customer agrees, a reserved consultation slot. The meeting stays “confirmation pending” until the customer confirms through the emailed link.',
-    next: 'Email confirmation is implemented. Google Calendar event creation and a Google Meet link are planned as the next integration; the demo does not claim either exists yet.',
+    details:
+      'The reservation starts as confirmation pending. After the customer confirms through the emailed link, the app creates the Google Calendar event and Meet link, then sends a follow-up email with the meeting details.',
   },
   {
     id: 'support',
@@ -83,7 +81,8 @@ export const customerJourneys = [
     ],
     outcome:
       'The customer has a recorded support request rather than an unanswered message. Staff receive the issue details and can track the investigation and resolution.',
-    next: 'For issues that need a discussion with the team, a consent-based video-call handoff is part of the intended workflow. Automatic support-call scheduling and access to private conversation history are not implemented in this demo.',
+    details:
+      'Support tickets can be created and reviewed in the dashboard. The demo does not schedule support calls or expose private customer history; the published project and customer codes are only for scoped demo ticket intake.',
   },
 ] as const;
 
@@ -98,11 +97,11 @@ export const scenarios = [
       'Start a call and describe the problem in your own words. Let the representative ask about the details it needs.',
       'Ask what a first version could include. You can mention a budget, team size or target date if you have one.',
       'Ask it to save your enquiry. Give a test name and an email or phone you are comfortable using, then confirm the details.',
-      'If you want a consultation, choose one of the real slots offered. A confirmation link is emailed; the dashboard remains pending until you confirm it.',
+      'If you want a consultation, choose one of the available slots. Open the confirmation email and confirm the reservation; the app then creates the Calendar event and Meet link and sends a follow-up email with the details.',
     ],
     result:
-      'The project inquiry appears under Project inquiries. An agreed consultation appears under Meetings as pending confirmation until the customer confirms the email link. After the call is processed, Calls shows its summary and available extracted details.',
-    note: 'Use an email inbox you control if you choose to test email confirmation. Google Calendar event creation and Google Meet links are not implemented yet.',
+      'The project enquiry appears under Project inquiries. The meeting first appears as pending confirmation; after confirmation, it is marked confirmed and its Google Calendar event and Meet link are emailed to the attendee. Calls shows the summary and available extracted details after processing.',
+    note: 'Use an inbox you control to receive the reservation link and the later Calendar/Meet details. Email submission being accepted does not guarantee delivery to the inbox.',
   },
   {
     number: '02',
@@ -133,6 +132,22 @@ export const scenarios = [
     ],
     result:
       'The representative answers from the company knowledge base. The dashboard can show the call and any knowledge searches. A general question should not become an unwanted sales enquiry.',
-    note: 'Try English first. The prompt also supports Hindi/Hinglish, but recognition quality still needs a human language test.',
+    note: 'English/Hinglish is the default. The caller can explicitly ask to continue in Marathi, Bengali, Telugu, or Kannada. The voice agent does not automatically switch languages.',
+  },
+  {
+    number: '04',
+    title: 'Continue in another language',
+    time: 'About 2–3 minutes',
+    intro:
+      'The call begins in English/Hinglish. The representative changes language only after the caller explicitly asks.',
+    say: 'Please speak in Marathi. मला एका छोट्या CRM बद्दल माहिती हवी आहे.',
+    steps: [
+      'Start a call and request Marathi, Bengali, Telugu, or Kannada. You can ask in English or use a phrase such as “দয়া করে বাংলায় বলুন”, “దయచేసి తెలుగులో మాట్లాడండి”, or “ದಯವಿಟ್ಟು ಕನ್ನಡದಲ್ಲಿ ಮಾತನಾಡಿ”.',
+      'Ask a company or product question in that language. You can keep familiar software terms, names, dates and numbers as they are.',
+      'To change language again, explicitly ask. A stray English word or code-mixed sentence does not request a language change.',
+    ],
+    result:
+      'Sarvam Saaras v4 transcribes and Sarvam Bulbul v3 speaks English and the four requested Indian languages. The same Shubh voice is used across them, and the existing enquiry, support and consultation tools remain available.',
+    note: 'There is no language selector. An explicit caller request is required for each language change.',
   },
 ];

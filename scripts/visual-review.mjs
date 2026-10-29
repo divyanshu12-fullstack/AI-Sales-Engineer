@@ -178,9 +178,9 @@ try {
     await expect(
       page.getByRole('heading', { name: 'AI sales & customer support representative' }),
     ).toBeVisible();
-    await expect(page.locator('.project-test')).toHaveCount(3);
+    await expect(page.locator('.project-test')).toHaveCount(4);
     await expect(page.locator('.voice-panel')).toHaveCount(1);
-    await expect(page.getByRole('button', { name: 'Pitch video coming soon' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Pitch video coming soon' })).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'Open admin dashboard' })).toHaveAttribute(
       'href',
       '/admin',

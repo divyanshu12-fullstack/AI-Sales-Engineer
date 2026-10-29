@@ -37,7 +37,7 @@ export const VoicePanel = ({ call }: { call: VoiceCall }) => {
         <span>
           <span className="signal-dot" /> YOUR AI CONSULTATION
         </span>
-        <span className="voice-language">EN / हिंदी</span>
+        <span className="voice-language">EN / हिंदी · मराठी · বাংলা · తెలుగు · ಕನ್ನಡ</span>
       </div>
       <div
         className="voice-symbol"
@@ -94,7 +94,9 @@ export const VoicePanel = ({ call }: { call: VoiceCall }) => {
       {!busy && (
         <label className="voice-consent">
           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-          <span>I agree to microphone use and conversation processing.</span>
+          <span className="voice-consent-copy">
+            <span lang="en">I agree to microphone use and conversation processing.</span>
+          </span>
         </label>
       )}
       <div className="voice-actions">

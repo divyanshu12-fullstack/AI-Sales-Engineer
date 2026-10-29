@@ -10,7 +10,7 @@ const requirements: { id: IntegrationId; variables: (keyof Env)[] }[] = [
     id: 'bolna',
     variables: ['BOLNA_API_KEY', 'BOLNA_AGENT_ID', 'BOLNA_TOOL_AUTH_TOKEN', 'BOLNA_WEBHOOK_SECRET'],
   },
-  { id: 'llm', variables: ['LLM_PROVIDER', 'LLM_API_KEY', 'LLM_MODEL'] },
+  { id: 'llm', variables: ['LLM_PROVIDER', 'LLM_API_KEY'] },
   { id: 'embeddings', variables: ['EMBEDDING_PROVIDER', 'EMBEDDING_API_KEY', 'EMBEDDING_MODEL'] },
   {
     id: 'calendar',

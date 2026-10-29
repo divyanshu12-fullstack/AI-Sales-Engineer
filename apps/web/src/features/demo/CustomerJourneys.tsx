@@ -70,9 +70,9 @@ export const CustomerJourneys = () => {
           <h4>What the team receives today</h4>
           <p>{journey.outcome}</p>
         </div>
-        <div className="project-planned">
-          <strong>Current boundary</strong>
-          <p>{journey.next}</p>
+        <div className="journey-note">
+          <strong>What happens next</strong>
+          <p>{journey.details}</p>
         </div>
       </div>
     </>

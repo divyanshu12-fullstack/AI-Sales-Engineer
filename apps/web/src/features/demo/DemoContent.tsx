@@ -1,9 +1,9 @@
 import type { RefObject } from 'react';
-import { ArrowUpRight, Play, Plus } from 'lucide-react';
+import { ArrowUpRight, Plus } from 'lucide-react';
 import { VoicePanel } from '../voice/VoicePanel.js';
 import type { VoiceCall } from '../voice/VoicePanel.js';
 import { CustomerJourneys } from './CustomerJourneys.js';
-import { pitchVideoUrl, scenarios, voiceStack } from './content.js';
+import { scenarios, voiceStack } from './content.js';
 
 const contents = [
   ['01', 'What we built', '#about-demo'],
@@ -55,34 +55,19 @@ export const DemoContent = ({
           </div>
           <div>
             <dt>What you can try today</dt>
-            <dd>Company questions, project enquiries, consultation slots and support tickets</dd>
+            <dd>
+              Company questions, project enquiries, consultation slots, support tickets and
+              requested-language calls
+            </dd>
           </div>
           <div>
-            <dt>What is not integrated yet</dt>
-            <dd>Google Calendar events and Google Meet links</dd>
+            <dt>Consultation follow-up</dt>
+            <dd>
+              Confirm by email to create the Calendar event and Meet link, then receive the meeting
+              details.
+            </dd>
           </div>
         </dl>
-        <div className="project-pitch">
-          {pitchVideoUrl ? (
-            <a
-              className="project-pitch-link"
-              href={pitchVideoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Play size={15} /> Watch the pitch <ArrowUpRight size={14} />
-            </a>
-          ) : (
-            <>
-              <button className="project-pitch-link" type="button" disabled>
-                <Play size={15} /> Pitch video coming soon
-              </button>
-              <small>
-                The video will be added here. You can read the walkthrough and try the agent now.
-              </small>
-            </>
-          )}
-        </div>
       </header>
 
       <section className="project-section" id="why-this-project">
@@ -182,8 +167,8 @@ export const DemoContent = ({
           </table>
         </div>
         <p className="project-small-note">
-          The current agent uses Gemini 3.6 Flash, Sarvam and Deepgram Nova-3. It uses reviewed
-          company information and the current conversation; this demo does not give callers
+          The current agent uses Sarvam Saaras v4, Gemini 3.6 Flash and Sarvam Bulbul v3. It uses
+          reviewed company information and the current conversation; this demo does not give callers
           unrestricted access to private customer history.
         </p>
       </section>
@@ -223,8 +208,8 @@ export const DemoContent = ({
         <div className="project-call" ref={panelRef}>
           <VoicePanel call={call} />
           <p>
-            English is the best-tested starting point. The prompt also supports Hindi/Hinglish;
-            recognition quality still needs a human language test.
+            English/Hinglish is the default. Ask explicitly to switch to Marathi, Bengali, Telugu,
+            or Kannada; the agent does not switch languages automatically.
           </p>
         </div>
       </section>
