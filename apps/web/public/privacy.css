@@ -1,0 +1,94 @@
+:root {
+  color: #202a27;
+  background: #fafaf6;
+  font-family: 'DM Sans Variable', 'Segoe UI', sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+a {
+  color: #276653;
+  text-underline-offset: 3px;
+}
+
+.privacy-page {
+  width: min(100% - 40px, 760px);
+  margin: 0 auto;
+  padding: 48px 0 80px;
+}
+
+.privacy-back {
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.privacy-page article {
+  margin-top: 64px;
+  padding: clamp(28px, 7vw, 64px);
+  border: 1px solid #dfe5d6;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgb(32 42 39 / 6%);
+}
+
+.privacy-eyebrow {
+  color: #276653;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+h1,
+h2 {
+  font-family: 'Manrope Variable', 'DM Sans Variable', sans-serif;
+}
+
+h1 {
+  margin: 12px 0 8px;
+  font-size: clamp(32px, 7vw, 48px);
+  line-height: 1.1;
+}
+
+.privacy-updated {
+  margin: 0 0 36px;
+  color: #76826d;
+  font-size: 14px;
+}
+
+section + section {
+  margin-top: 26px;
+}
+
+h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+section p {
+  margin: 0;
+  color: #56635c;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+@media (max-width: 520px) {
+  .privacy-page {
+    width: min(100% - 28px, 760px);
+    padding-top: 28px;
+  }
+
+  .privacy-page article {
+    margin-top: 42px;
+  }
+}

@@ -9,7 +9,10 @@ import {
   consultantScore,
 } from '../src/modules/consultations/availability.js';
 import type { Consultant } from '../src/modules/consultations/availability.js';
-import { meetingEmailTemplate } from '../src/modules/consultations/email-template.js';
+import {
+  meetingCalendarEmailTemplate,
+  meetingEmailTemplate,
+} from '../src/modules/consultations/email-template.js';
 import { isDemoAddress } from '../src/modules/consultations/email.js';
 
 const config = parseEnv({
@@ -176,6 +179,25 @@ describe('consultation email and confirmation page', () => {
     expect(isDemoAddress('reviewer@resend.dev')).toBe(false);
   });
 
+  it('includes Meet and Calendar links only in the post-confirmation email', () => {
+    const template = meetingCalendarEmailTemplate({
+      reference: 'MTG-LINKS',
+      title: 'Portal <review>',
+      consultantName: 'Meera Kapoor',
+      displayTime: 'Wed, 4 Nov, 11:00 am IST',
+      durationMinutes: 30,
+      timezone: 'Asia/Kolkata',
+      calendarUrl: 'https://www.google.com/calendar/event?eid=demo',
+      meetUrl: 'https://meet.google.com/abc-defg-hij',
+    });
+    expect(template.subject).toContain('Your consultation is confirmed');
+    expect(template.text).toContain('https://meet.google.com/abc-defg-hij');
+    expect(template.text).toContain('https://www.google.com/calendar/event?eid=demo');
+    expect(template.html).toContain('Join Google Meet');
+    expect(template.html).toContain('&lt;review&gt;');
+    expect(template.html).not.toContain('Portal <review>');
+  });
+
   it('serves a safe GET page that does not confirm by itself, then confirms on POST', async () => {
     const pending = {
       status: 'pending',
@@ -227,9 +249,11 @@ describe('consultation email and confirmation page', () => {
     );
     const confirmed = await request(app())
       .post('/api/meetings/confirmation')
+      .set('Origin', 'https://mail.example.test')
       .type('form')
       .send({ token });
     expect(confirmed.status).toBe(200);
+    expect(confirmed.headers['access-control-allow-origin']).toBeUndefined();
     expect(confirmed.text).toContain('Your consultation is confirmed');
     expect(fetch).toHaveBeenCalledTimes(2);
   });

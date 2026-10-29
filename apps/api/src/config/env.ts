@@ -47,13 +47,24 @@ const envSchema = z.object({
   EMBEDDING_API_KEY: optionalText,
   EMBEDDING_MODEL: optionalText,
   CALENDAR_PROVIDER: z.literal('google').optional(),
-  // Reserved for the planned Google Calendar adapter. Not used by the current API.
-  GOOGLE_SERVICE_ACCOUNT_EMAIL: z.email().optional(),
-  GOOGLE_PRIVATE_KEY: optionalText,
+  GOOGLE_CLIENT_ID: optionalText,
+  GOOGLE_CLIENT_SECRET: optionalText,
+  GOOGLE_REFRESH_TOKEN: optionalText,
   GOOGLE_CALENDAR_ID: optionalText,
-  GOOGLE_CALENDAR_TIMEZONE: optionalText,
+  GOOGLE_CALENDAR_TIMEZONE: z
+    .string()
+    .refine((value) => {
+      try {
+        new Intl.DateTimeFormat('en-US', { timeZone: value });
+        return true;
+      } catch {
+        return false;
+      }
+    }, 'Expected an IANA timezone.')
+    .default('Asia/Kolkata'),
   RESEND_API_KEY: optionalText,
   RESEND_FROM_EMAIL: z.email().optional(),
+  PRIVACY_CONTACT_EMAIL: z.email().optional(),
   SUPPORT_EMAIL_WORKER_ENABLED: z.enum(['true', 'false']).default('true'),
   // Optional key separation for deterministic email-confirmation links; falls back to the
   // server-only Supabase secret. Rotating it invalidates previously emailed links.
@@ -88,6 +99,18 @@ export const parseEnv = (source: Record<string, string | undefined>): Env => {
     result.data.BOLNA_TOOL_AUTH_TOKEN === result.data.BOLNA_WEBHOOK_SECRET
   ) {
     throw new ConfigurationError(['BOLNA_TOOL_AUTH_TOKEN', 'BOLNA_WEBHOOK_SECRET']);
+  }
+
+  const calendarFields = [
+    'CALENDAR_PROVIDER',
+    'GOOGLE_CLIENT_ID',
+    'GOOGLE_CLIENT_SECRET',
+    'GOOGLE_REFRESH_TOKEN',
+    'GOOGLE_CALENDAR_ID',
+  ] as const;
+  if (calendarFields.some((field) => result.data[field] !== undefined)) {
+    const missing = calendarFields.filter((field) => result.data[field] === undefined);
+    if (missing.length) throw new ConfigurationError(missing);
   }
 
   return result.data;

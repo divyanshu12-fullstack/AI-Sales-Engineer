@@ -16,8 +16,9 @@ const requirements: { id: IntegrationId; variables: (keyof Env)[] }[] = [
     id: 'calendar',
     variables: [
       'CALENDAR_PROVIDER',
-      'GOOGLE_SERVICE_ACCOUNT_EMAIL',
-      'GOOGLE_PRIVATE_KEY',
+      'GOOGLE_CLIENT_ID',
+      'GOOGLE_CLIENT_SECRET',
+      'GOOGLE_REFRESH_TOKEN',
       'GOOGLE_CALENDAR_ID',
       'GOOGLE_CALENDAR_TIMEZONE',
     ],

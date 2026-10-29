@@ -7,13 +7,14 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Logger } from 'pino';
 import type { Env } from './config/env.js';
-import { createErrorHandler, errorBody, HttpError } from './http/errors.js';
+import { createErrorHandler, errorBody } from './http/errors.js';
 import { createRequestContext } from './http/request-context.js';
 import { getLiveness, getReadiness } from './modules/health/service.js';
 import { operationsRouter } from './modules/operations/router.js';
 import { voiceRouter } from './modules/voice/router.js';
 import { supportRouter } from './modules/support/router.js';
 import { consultationsRouter } from './modules/consultations/router.js';
+import { privacyPage } from './modules/privacy/page.js';
 
 export const createApp = (config: Env, logger: Logger) => {
   const app = express();
@@ -42,11 +43,11 @@ export const createApp = (config: Env, logger: Logger) => {
   app.use(
     cors({
       origin: (origin, callback) => {
-        if (origin === undefined || origin === config.WEB_ORIGIN) {
-          callback(null, true);
-          return;
-        }
-        callback(new HttpError(403, 'ORIGIN_NOT_ALLOWED', 'This origin is not allowed.'));
+        // CORS controls whether browser JavaScript may read a response; it is not an
+        // authorization check. In particular, email-link navigation and form POSTs
+        // must reach the confirmation route even when their Origin is not the web UI.
+        // Returning false omits Access-Control-Allow-Origin while preserving that boundary.
+        callback(null, origin === undefined || origin === config.WEB_ORIGIN);
       },
       exposedHeaders: ['X-Request-ID'],
       allowedHeaders: ['Content-Type', 'Authorization'],
@@ -87,6 +88,13 @@ export const createApp = (config: Env, logger: Logger) => {
 
   app.get('/api/health/ready', (_request, response) => {
     response.status(503).json(getReadiness(config));
+  });
+
+  app.get('/privacy', (_request, response) => {
+    response
+      .set('Cache-Control', 'no-cache')
+      .type('html')
+      .send(privacyPage(config.PRIVACY_CONTACT_EMAIL));
   });
 
   if (config.NODE_ENV === 'production') {

@@ -123,6 +123,7 @@ export const meetingConfirmationResultSchema = z.discriminatedUnion('status', [
   }),
   z.object({
     status: z.literal('confirmed'),
+    meeting_id: z.uuid().optional(),
     reference: z.string(),
     title: z.string(),
     start_at: z.string(),
@@ -155,6 +156,15 @@ export const dashboardSchema = z.strictObject({
         confirmation_expired: z.boolean().default(false),
         confirmation_sent_at: z.string().nullable().default(null),
         confirmed_at: z.string().nullable().default(null),
+        calendar_sync_status: z
+          .enum(['not_requested', 'pending', 'processing', 'succeeded', 'failed'])
+          .default('not_requested'),
+        calendar_sync_attempts: z.number().int().nonnegative().default(0),
+        calendar_sync_error_code: z.string().nullable().default(null),
+        calendar_event_url: z.string().nullable().default(null),
+        meet_url: z.string().nullable().default(null),
+        calendar_synced_at: z.string().nullable().default(null),
+        calendar_confirmation_sent_at: z.string().nullable().default(null),
         employees: z.object({ full_name: z.string() }).nullable().default(null),
       }),
     )

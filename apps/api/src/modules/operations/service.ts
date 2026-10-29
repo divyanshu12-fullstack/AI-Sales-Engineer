@@ -160,7 +160,7 @@ export class Operations {
         'integration_jobs?select=id,status,attempts,last_error_code,provider_message_id,created_at,payload&job_type=eq.send_email&dedupe_key=like.support:*&order=created_at.desc&limit=80',
       ),
       this.database.request(
-        `meetings?select=id,code,title,requested_start_at,duration_minutes,timezone,status,provider,provider_event_id,inquiry_id,project_id,confirmation_expires_at,confirmation_sent_at,confirmed_at,employees(full_name)&status=in.(requested,pending_confirmation,confirmed)&requested_start_at=gte.${encodeURIComponent(new Date().toISOString())}&order=requested_start_at&limit=30`,
+        `meetings?select=id,code,title,requested_start_at,duration_minutes,timezone,status,provider,provider_event_id,inquiry_id,project_id,confirmation_expires_at,confirmation_sent_at,confirmed_at,calendar_sync_status,calendar_sync_attempts,calendar_sync_error_code,calendar_event_url,meet_url,calendar_synced_at,calendar_confirmation_sent_at,employees(full_name)&status=in.(requested,pending_confirmation,confirmed)&requested_start_at=gte.${encodeURIComponent(new Date().toISOString())}&order=requested_start_at&limit=30`,
       ),
       this.database.request('knowledge_chunks?select=document_id&limit=1000'),
     ]);

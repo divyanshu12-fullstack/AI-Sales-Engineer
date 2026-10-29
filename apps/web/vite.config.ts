@@ -13,7 +13,10 @@ export default defineConfig(({ mode }) => {
     throw new Error('Invalid PORT: expected an integer between 1 and 65535.');
   }
 
-  const proxy = { '/api': { target: `http://127.0.0.1:${port}`, changeOrigin: false } };
+  const proxy = {
+    '/api': { target: `http://127.0.0.1:${port}`, changeOrigin: false },
+    '^/privacy$': { target: `http://127.0.0.1:${port}`, changeOrigin: false },
+  };
 
   return {
     plugins: [react(), tailwindcss()],

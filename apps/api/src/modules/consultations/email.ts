@@ -4,17 +4,17 @@ import type { Logger } from 'pino';
 import type { Env } from '../../config/env.js';
 import { Database } from '../../lib/database.js';
 import { consultationDisplay } from './availability.js';
-import { meetingEmailTemplate } from './email-template.js';
+import { meetingCalendarEmailTemplate, meetingEmailTemplate } from './email-template.js';
 
 const jobSchema = z.object({
   id: z.uuid(),
   dedupe_key: z.string(),
   attempts: z.number().int(),
   created_at: z.string(),
-  payload: z.object({
-    meeting_id: z.uuid(),
-    template: z.literal('meeting_confirmation'),
-  }),
+  payload: z.discriminatedUnion('template', [
+    z.object({ meeting_id: z.uuid(), template: z.literal('meeting_confirmation') }),
+    z.object({ meeting_id: z.uuid(), template: z.literal('meeting_calendar_confirmation') }),
+  ]),
 });
 const meetingSchema = z.object({
   id: z.uuid(),
@@ -25,6 +25,9 @@ const meetingSchema = z.object({
   timezone: z.string(),
   status: z.string(),
   contact_id: z.uuid(),
+  provider: z.string().nullable(),
+  calendar_event_url: z.string().nullable(),
+  meet_url: z.string().nullable(),
   employees: z.object({ full_name: z.string() }).nullable(),
 });
 const contactSchema = z.object({
@@ -70,14 +73,23 @@ export class MeetingEmail {
         .array(meetingSchema)
         .parse(
           await this.database.request(
-            `meetings?select=id,code,title,requested_start_at,duration_minutes,timezone,status,contact_id,employees(full_name)&id=eq.${job.payload.meeting_id}&limit=1`,
+            `meetings?select=id,code,title,requested_start_at,duration_minutes,timezone,status,contact_id,provider,calendar_event_url,meet_url,employees(full_name)&id=eq.${job.payload.meeting_id}&limit=1`,
           ),
         );
       const meeting = meetings[0];
-      if (!meeting || meeting.status !== 'pending_confirmation') {
+      const calendarFollowUp = job.payload.template === 'meeting_calendar_confirmation';
+      if (
+        !meeting ||
+        (calendarFollowUp
+          ? meeting.status !== 'confirmed' ||
+            meeting.provider !== 'google_calendar' ||
+            !meeting.calendar_event_url ||
+            !meeting.meet_url
+          : meeting.status !== 'pending_confirmation')
+      ) {
         code = 'MEETING_NOT_PENDING';
         terminal = true;
-        throw new Error('Meeting is not awaiting confirmation');
+        throw new Error('Meeting is not ready for this email.');
       }
       const contacts = z
         .array(contactSchema)
@@ -101,31 +113,43 @@ export class MeetingEmail {
         terminal = true;
         throw new Error('Manual reconciliation required');
       }
-      const token = meetingConfirmationToken(this.config, meeting.id);
-      const tokenHash = createHash('sha256').update(token).digest('hex');
-      const confirmUrl = `${confirmationBaseUrl(this.config)}/api/meetings/confirmation?token=${encodeURIComponent(token)}`;
-      const expiresAt = new Date(Date.now() + 7 * 86_400_000);
-      await this.database.request(
-        `meetings?id=eq.${meeting.id}`,
-        {
-          confirmation_token_sha256: tokenHash,
-          confirmation_expires_at: expiresAt.toISOString(),
-        },
-        'PATCH',
-      );
-      const template = meetingEmailTemplate({
+      const commonTemplate = {
         reference: meeting.code,
         title: meeting.title,
         consultantName: meeting.employees?.full_name ?? 'the AsterByte team',
         displayTime: consultationDisplay(meeting.requested_start_at),
         durationMinutes: meeting.duration_minutes,
         timezone: meeting.timezone,
-        confirmUrl,
-        expiresOn: new Intl.DateTimeFormat('en-IN', {
-          dateStyle: 'medium',
-          timeZone: 'Asia/Kolkata',
-        }).format(expiresAt),
-      });
+      };
+      let template: ReturnType<typeof meetingEmailTemplate>;
+      if (calendarFollowUp) {
+        template = meetingCalendarEmailTemplate({
+          ...commonTemplate,
+          calendarUrl: meeting.calendar_event_url as string,
+          meetUrl: meeting.meet_url as string,
+        });
+      } else {
+        const token = meetingConfirmationToken(this.config, meeting.id);
+        const tokenHash = createHash('sha256').update(token).digest('hex');
+        const confirmUrl = `${confirmationBaseUrl(this.config)}/api/meetings/confirmation?token=${encodeURIComponent(token)}`;
+        const expiresAt = new Date(Date.now() + 7 * 86_400_000);
+        await this.database.request(
+          `meetings?id=eq.${meeting.id}`,
+          {
+            confirmation_token_sha256: tokenHash,
+            confirmation_expires_at: expiresAt.toISOString(),
+          },
+          'PATCH',
+        );
+        template = meetingEmailTemplate({
+          ...commonTemplate,
+          confirmUrl,
+          expiresOn: new Intl.DateTimeFormat('en-IN', {
+            dateStyle: 'medium',
+            timeZone: 'Asia/Kolkata',
+          }).format(expiresAt),
+        });
+      }
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         redirect: 'error',
@@ -149,7 +173,9 @@ export class MeetingEmail {
       const result = z.object({ id: z.string().min(1) }).parse(await response.json());
       await this.database.request(
         `meetings?id=eq.${meeting.id}`,
-        { confirmation_sent_at: new Date().toISOString() },
+        calendarFollowUp
+          ? { calendar_confirmation_sent_at: new Date().toISOString() }
+          : { confirmation_sent_at: new Date().toISOString() },
         'PATCH',
       );
       await this.database.request(
@@ -182,6 +208,17 @@ export class MeetingEmail {
         'Consultation confirmation email was not confirmed accepted.',
       );
     }
+  }
+
+  async dispatchCalendarConfirmation(meetingId: string): Promise<void> {
+    const jobs = z
+      .array(z.object({ id: z.uuid() }))
+      .parse(
+        await this.database.request(
+          `integration_jobs?select=id&dedupe_key=eq.meeting:calendar-confirmed:${meetingId}&status=in.(pending,failed)&limit=1`,
+        ),
+      );
+    if (jobs[0]) await this.dispatch(jobs[0].id);
   }
 
   async runBatch(): Promise<void> {

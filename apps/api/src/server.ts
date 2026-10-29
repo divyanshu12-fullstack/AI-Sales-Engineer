@@ -3,6 +3,7 @@ import { ConfigurationError, loadEnvironment } from './config/env.js';
 import { createLogger } from './lib/logger.js';
 import { startSupportEmailWorker } from './modules/support/email.js';
 import { startMeetingEmailWorker } from './modules/consultations/email.js';
+import { startMeetingCalendarWorker } from './modules/consultations/calendar-sync.js';
 
 const startServer = (): void => {
   const config = loadEnvironment();
@@ -10,6 +11,7 @@ const startServer = (): void => {
   const app = createApp(config, logger);
   const stopEmailWorker = startSupportEmailWorker(config, logger);
   const stopMeetingEmailWorker = startMeetingEmailWorker(config, logger);
+  const stopMeetingCalendarWorker = startMeetingCalendarWorker(config, logger);
   const server = app.listen(config.PORT, config.HOST, () => {
     logger.info(
       { event: 'server_started', host: config.HOST, port: config.PORT },
@@ -28,6 +30,7 @@ const startServer = (): void => {
   const shutdown = (signal: string): void => {
     stopEmailWorker();
     stopMeetingEmailWorker();
+    stopMeetingCalendarWorker();
     logger.info({ event: 'shutdown_started', signal }, 'Closing HTTP server.');
     const deadline = setTimeout(() => {
       logger.error({ event: 'shutdown_timeout' }, 'HTTP shutdown exceeded 10 seconds.');

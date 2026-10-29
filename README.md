@@ -4,9 +4,10 @@ This project is a working voice-agent demo for a software consultancy. A visitor
 
 ## Try the website
 
-- Live website: <https://asterbyte-client-connect-live.azurewebsites.net>
-- Project walkthrough and call scenarios: <https://asterbyte-client-connect-live.azurewebsites.net/demo>
-- Administrator sign-in: <https://asterbyte-client-connect-live.azurewebsites.net/admin>
+- Live website: <https://asterbyte.divyanshu.engineer>
+- Project walkthrough and call scenarios: <https://asterbyte.divyanshu.engineer/demo>
+- Administrator sign-in: <https://asterbyte.divyanshu.engineer/admin>
+- Privacy policy: <https://asterbyte.divyanshu.engineer/privacy>
 
 The `/demo` page explains the customer journeys, voice stages, sample prompts, expected dashboard results, and current limitations. The live call requires microphone permission. Use test details and do not share passwords or sensitive information. Dashboard access requires administrator credentials from the project owner; there is no public sign-in bypass.
 
@@ -17,7 +18,7 @@ The `/demo` page explains the customer journeys, voice stages, sample prompts, e
 - **Operations dashboard:** authenticated staff can review calls and processed summaries, project enquiries, support tickets, consultation reservations, and backend tool/knowledge activity.
 - **Voice experience:** the browser connects to the Bolna voice service. The configured pipeline uses Deepgram Nova-3 for speech recognition, Gemini 3.6 Flash for language reasoning, and Sarvam for speech generation.
 
-Google Calendar event creation and Google Meet links are **not implemented**. A consultation confirmation email is not proof of calendar booking or inbox delivery. Demo project/customer codes enable fictional issue intake only; they are not production identity verification and do not grant access to private customer history. See `/demo` for further scope details and expected test outcomes.
+After a customer confirms a consultation, the API can create a Google Calendar event and Meet link using the project owner’s personal-Gmail OAuth refresh token. The OAuth client secret and refresh token stay in server-side settings. Only the `calendar.events` scope is needed; availability is read from the app database, not Google FreeBusy. A follow-up email is sent only after Google confirms the event and Meet link. This integration remains unavailable until the Calendar API, OAuth credentials, calendar, and Resend settings are configured; a confirmation alone is not proof of calendar booking or email delivery. Demo project/customer codes enable fictional issue intake only; they are not production identity verification and do not grant access to private customer history. See `/demo` for further scope details and expected test outcomes.
 
 ## How it is built
 
@@ -28,7 +29,7 @@ Google Calendar event creation and Google Meet links are **not implemented**. A 
 - **Email:** Resend is used for configured support notifications and consultation confirmation.
 - **Shared contracts:** the `packages/contracts` workspace contains shared request and response schemas.
 
-The production app is hosted at `https://asterbyte-client-connect-live.azurewebsites.net`. Supabase, Bolna and Resend are external services. The API health endpoint is `/api/health/live`.
+The production app is hosted at `https://asterbyte.divyanshu.engineer`. Supabase, Bolna, Google Calendar and Resend are external services. The API health endpoint is `/api/health/live`.
 
 ## Run locally
 
@@ -41,7 +42,7 @@ npm run dev
 
 Open the local website at <http://127.0.0.1:5173>, the walkthrough at <http://127.0.0.1:5173/demo>, and the admin sign-in at <http://127.0.0.1:5173/admin>. The development server proxies `/api` requests to Express on port 3001.
 
-The public pages can be viewed without credentials. Live calling, administrator sign-in, persistence, and email require the appropriate server-side configuration. Copy `.env.example` to `.env` only if needed, and never commit `.env` or share its secrets. Do not use real customer information for demo calls.
+The public pages can be viewed without credentials. Live calling, administrator sign-in, persistence, and email require the appropriate server-side configuration. Copy `.env.example` to `.env` only if needed, and never commit `.env` or share its secrets. Set `PRIVACY_CONTACT_EMAIL` to the address that should receive deletion and privacy requests; the public page shows `[your email]` until it is configured. Do not use real customer information for demo calls.
 
 ## Verify changes
 

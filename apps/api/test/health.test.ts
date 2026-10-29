@@ -59,18 +59,47 @@ describe('foundation HTTP API', () => {
     expect(response.text).not.toContain('demo@example.com');
   });
 
-  it('allows the configured web origin and rejects another origin', async () => {
+  it('grants CORS only to the configured web origin without rejecting navigational requests', async () => {
     const app = makeApp();
     const allowed = await request(app)
       .get('/api/health/live')
       .set('Origin', 'http://127.0.0.1:5173')
       .expect(200);
     expect(allowed.headers['access-control-allow-origin']).toBe('http://127.0.0.1:5173');
-    const denied = await request(app)
+    const otherOrigin = await request(app)
       .get('/api/health/live')
       .set('Origin', 'https://untrusted.example')
-      .expect(403);
-    expect(errorResponseSchema.parse(denied.body).error.code).toBe('ORIGIN_NOT_ALLOWED');
+      .expect(200);
+    expect(otherOrigin.headers['access-control-allow-origin']).toBeUndefined();
+  });
+
+  it('allows the custom production site origin when configured', async () => {
+    const app = makeApp({ WEB_ORIGIN: 'https://asterbyte.divyanshu.engineer/' });
+    const response = await request(app)
+      .options('/api/voice/session')
+      .set('Origin', 'https://asterbyte.divyanshu.engineer')
+      .set('Access-Control-Request-Method', 'POST')
+      .set('Access-Control-Request-Headers', 'content-type')
+      .expect(204);
+    expect(response.headers['access-control-allow-origin']).toBe(
+      'https://asterbyte.divyanshu.engineer',
+    );
+  });
+
+  it('serves the privacy policy as crawlable HTML with the configured contact address', async () => {
+    const response = await request(makeApp({ PRIVACY_CONTACT_EMAIL: 'privacy@asterbyte.example' }))
+      .get('/privacy')
+      .expect(200)
+      .expect('Content-Type', /text\/html/);
+    expect(response.text).toContain('<title>Privacy Policy | AsterByte Solutions</title>');
+    expect(response.text).toContain('Google API Services User Data Policy');
+    expect(response.text).toContain('mailto:privacy@asterbyte.example');
+    expect(response.headers['cache-control']).toBe('no-cache');
+  });
+
+  it('shows a visible contact placeholder until one is configured', async () => {
+    const response = await request(makeApp()).get('/privacy').expect(200);
+    expect(response.text).toContain('[your email]');
   });
 
   it('responds to CORS preflight without requiring an application route', async () => {
@@ -79,6 +108,12 @@ describe('foundation HTTP API', () => {
       .set('Origin', 'http://127.0.0.1:5173')
       .set('Access-Control-Request-Method', 'GET')
       .expect(204);
+    const untrusted = await request(makeApp())
+      .options('/api/health/ready')
+      .set('Origin', 'https://untrusted.example')
+      .set('Access-Control-Request-Method', 'POST')
+      .expect(404);
+    expect(untrusted.headers['access-control-allow-origin']).toBeUndefined();
   });
 
   it('returns predictable not-found errors without echoing the requested path', async () => {

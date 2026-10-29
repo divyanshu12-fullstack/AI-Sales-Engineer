@@ -20,6 +20,8 @@ import {
 } from './availability.js';
 import type { BusyMeeting, Consultant } from './availability.js';
 import { MeetingEmail } from './email.js';
+import { MeetingCalendarSync } from './calendar-sync.js';
+import { isGoogleCalendarConfigured } from './google-calendar.js';
 
 const validate = <T>(schema: z.ZodType<T>, input: unknown): T => {
   const result = schema.safeParse(input);
@@ -60,12 +62,14 @@ const DAY_MS = 86_400_000;
 export class Consultations {
   readonly database: Database;
   readonly mail: MeetingEmail;
+  readonly calendar: MeetingCalendarSync;
   constructor(
     private readonly config: Env,
     private readonly logger: Logger,
   ) {
     this.database = new Database(config);
     this.mail = new MeetingEmail(config, logger);
+    this.calendar = new MeetingCalendarSync(config, logger);
   }
 
   private async audit<T>(
@@ -276,8 +280,25 @@ export class Consultations {
   async confirm(token: string) {
     if (!/^[0-9a-f]{64}$/.test(token))
       return meetingConfirmationResultSchema.parse({ status: 'invalid' });
-    return meetingConfirmationResultSchema.parse(
+    const result = meetingConfirmationResultSchema.parse(
       await this.database.rpc('confirm_meeting', { token_hash: hashToken(token) }),
     );
+    if (result.status === 'confirmed' && result.meeting_id) {
+      void this.dispatchCalendarAndEmail(result.meeting_id);
+    }
+    return result;
+  }
+
+  private async dispatchCalendarAndEmail(meetingId: string) {
+    if (!isGoogleCalendarConfigured(this.config)) return;
+    try {
+      await this.calendar.dispatchForMeeting(meetingId);
+      await this.mail.dispatchCalendarConfirmation(meetingId);
+    } catch {
+      this.logger.warn(
+        { event: 'meeting_calendar_dispatch_deferred', meetingId },
+        'Consultation is confirmed; Calendar and follow-up email remain queued.',
+      );
+    }
   }
 }

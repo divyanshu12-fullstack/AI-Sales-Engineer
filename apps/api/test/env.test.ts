@@ -31,6 +31,33 @@ describe('environment validation', () => {
     expect(parseEnv({ WEB_ORIGIN: 'https://example.com/' }).WEB_ORIGIN).toBe('https://example.com');
   });
 
+  it('requires complete personal-Gmail OAuth Calendar credentials', () => {
+    expect(() => parseEnv({ CALENDAR_PROVIDER: 'google' })).toThrow('GOOGLE_CLIENT_ID');
+    expect(() =>
+      parseEnv({
+        CALENDAR_PROVIDER: 'google',
+        GOOGLE_CLIENT_ID: 'client-id',
+        GOOGLE_CLIENT_SECRET: 'client-secret',
+        GOOGLE_CALENDAR_ID: 'primary',
+      }),
+    ).toThrow('GOOGLE_REFRESH_TOKEN');
+    expect(
+      parseEnv({
+        CALENDAR_PROVIDER: 'google',
+        GOOGLE_CLIENT_ID: 'client-id',
+        GOOGLE_CLIENT_SECRET: 'client-secret',
+        GOOGLE_REFRESH_TOKEN: 'refresh-token',
+        GOOGLE_CALENDAR_ID: 'primary',
+      }).GOOGLE_CALENDAR_ID,
+    ).toBe('primary');
+    expect(() => parseEnv({ GOOGLE_CALENDAR_TIMEZONE: 'Mars/Olympus' })).toThrow(
+      'GOOGLE_CALENDAR_TIMEZONE',
+    );
+    expect(parseEnv({ GOOGLE_CALENDAR_TIMEZONE: 'Asia/Kolkata' }).GOOGLE_CALENDAR_TIMEZONE).toBe(
+      'Asia/Kolkata',
+    );
+  });
+
   it('rejects weak or reused Bolna callback credentials', () => {
     expect(() => parseEnv({ BOLNA_TOOL_AUTH_TOKEN: 'short' })).toThrow('BOLNA_TOOL_AUTH_TOKEN');
     expect(() =>

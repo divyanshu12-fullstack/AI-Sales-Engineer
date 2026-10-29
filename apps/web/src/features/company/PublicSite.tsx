@@ -403,6 +403,7 @@ export const PublicSite = ({ demo = false }: { demo?: boolean }) => {
             <a href="/admin">
               Administrator access <ArrowUpRight size={13} />
             </a>
+            <a href="/privacy">Privacy policy</a>
           </div>
         </div>
       </footer>

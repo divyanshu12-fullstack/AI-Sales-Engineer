@@ -68,6 +68,7 @@ describe('consultation scheduling and email confirmation boundaries', () => {
       '20261025150940_support_workflow.sql',
       '20261028132018_consultation_scheduling.sql',
       '20261028132636_consultation_reservation_expiry.sql',
+      '20261029123517_google_calendar_meeting_sync.sql',
     ])
       await db.exec(await readFile(resolve(workspaceRoot, 'supabase/migrations', name), 'utf8'));
 
@@ -299,14 +300,18 @@ describe('consultation scheduling and email confirmation boundaries', () => {
         provider: string;
         provider_event_id: string;
         confirmed_at: string;
-      }>('select status,provider,provider_event_id,confirmed_at from public.meetings where id=$1', [
-        meeting,
-      ])
+      }>(
+        'select status,provider,provider_event_id,confirmed_at,calendar_sync_status,calendar_event_url,meet_url from public.meetings where id=$1',
+        [meeting],
+      )
     ).rows[0];
     expect(confirmedRow).toMatchObject({
       status: 'confirmed',
       provider: 'customer_confirmation',
-      provider_event_id: meeting,
+      provider_event_id: null,
+      calendar_sync_status: 'pending',
+      calendar_event_url: null,
+      meet_url: null,
     });
     expect(confirmedRow?.confirmed_at).toBeTruthy();
     expect(
@@ -317,6 +322,60 @@ describe('consultation scheduling and email confirmation boundaries', () => {
         )
       ).rows,
     ).toEqual([{ n: 1 }]);
+    expect(
+      (
+        await db.query(
+          "select count(*)::int n from public.integration_jobs where job_type='calendar_booking' and dedupe_key=$1",
+          [`meeting:calendar:${meeting}`],
+        )
+      ).rows,
+    ).toEqual([{ n: 1 }]);
+  });
+
+  it('claims the calendar job and persists Meet details before queuing the follow-up email', async () => {
+    await db.exec('set role service_role');
+    try {
+      const claim = await db.query<{ id: string; status: string; attempts: number }>(
+        'select * from public.claim_meeting_calendar(null)',
+      );
+      const job = claim.rows.find(({ id }) => id !== '');
+      expect(job).toMatchObject({ status: 'processing', attempts: 1 });
+      const eventId = `a${'b'.repeat(32)}`;
+      await db.query('select public.complete_meeting_calendar($1,$2,$3,$4,$5)', [
+        job?.id,
+        meeting,
+        eventId,
+        'https://www.google.com/calendar/event?eid=synthetic',
+        'https://meet.google.com/abc-defg-hij',
+      ]);
+      const completed = await db.query<{
+        provider: string;
+        provider_event_id: string;
+        calendar_sync_status: string;
+        calendar_event_url: string;
+        meet_url: string;
+      }>(
+        'select provider,provider_event_id,calendar_sync_status,calendar_event_url,meet_url from public.meetings where id=$1',
+        [meeting],
+      );
+      expect(completed.rows[0]).toMatchObject({
+        provider: 'google_calendar',
+        provider_event_id: eventId,
+        calendar_sync_status: 'succeeded',
+        calendar_event_url: 'https://www.google.com/calendar/event?eid=synthetic',
+        meet_url: 'https://meet.google.com/abc-defg-hij',
+      });
+      expect(
+        (
+          await db.query(
+            "select payload->>'template' template,status from public.integration_jobs where dedupe_key=$1",
+            [`meeting:calendar-confirmed:${meeting}`],
+          )
+        ).rows,
+      ).toEqual([{ template: 'meeting_calendar_confirmation', status: 'pending' }]);
+    } finally {
+      await db.exec('reset role');
+    }
   });
 
   it('does not confirm an expired reservation and never exposes contact details', async () => {
@@ -362,6 +421,67 @@ describe('consultation scheduling and email confirmation boundaries', () => {
     }
   });
 
+  it('retries a transient Calendar failure without losing the confirmation', async () => {
+    const retryAt = new Date(Date.parse(laterAt) + 30 * 60_000).toISOString();
+    await db.exec('set role service_role');
+    let retryMeeting: string | undefined;
+    try {
+      const scheduled = await schedule({
+        key: 'agent:meeting-calendar-retry',
+        reference: inquiry,
+        at: retryAt,
+        email: '',
+        who: consultant,
+      });
+      retryMeeting = (scheduled.rows[0]?.r as { meeting_id: string }).meeting_id;
+      const tokenHash = sha('f');
+      await db.query(
+        "update public.meetings set confirmation_token_sha256=$1,confirmation_expires_at=now()+interval '7 days' where id=$2",
+        [tokenHash, retryMeeting],
+      );
+      await db.query('select public.confirm_meeting($1)', [tokenHash]);
+      const jobs = await db.query<{ id: string }>(
+        'select id from public.integration_jobs where dedupe_key=$1',
+        [`meeting:calendar:${retryMeeting}`],
+      );
+      const jobId = jobs.rows[0]?.id;
+      expect(jobId).toBeTruthy();
+      const claim = await db.query('select * from public.claim_meeting_calendar($1)', [jobId]);
+      expect(claim.rows).toHaveLength(1);
+      await db.query('select public.fail_meeting_calendar($1,$2,$3,$4)', [
+        jobId,
+        retryMeeting,
+        'GOOGLE_UNAVAILABLE',
+        true,
+      ]);
+    } finally {
+      await db.exec('reset role');
+    }
+    if (!retryMeeting) throw new Error('Expected the synthetic meeting to be scheduled.');
+    expect(
+      (
+        await db.query(
+          'select calendar_sync_status,calendar_sync_attempts,calendar_sync_error_code from public.meetings where id=$1',
+          [retryMeeting],
+        )
+      ).rows,
+    ).toEqual([
+      {
+        calendar_sync_status: 'pending',
+        calendar_sync_attempts: 1,
+        calendar_sync_error_code: 'GOOGLE_UNAVAILABLE',
+      },
+    ]);
+    expect(
+      (
+        await db.query(
+          'select status,attempts,last_error_code,locked_until from public.integration_jobs where dedupe_key=$1',
+          [`meeting:calendar:${retryMeeting}`],
+        )
+      ).rows[0],
+    ).toMatchObject({ status: 'failed', attempts: 1, last_error_code: 'GOOGLE_UNAVAILABLE' });
+  });
+
   it('leases only consultation emails and denies anonymous execution', async () => {
     const job = await db.query<{ id: string }>('select * from public.claim_meeting_email()');
     expect(job.rows).toHaveLength(1);
@@ -373,6 +493,9 @@ describe('consultation scheduling and email confirmation boundaries', () => {
       await expect(
         db.query('select public.get_meeting_confirmation($1)', [sha('d')]),
       ).rejects.toThrow('permission denied');
+      await expect(db.query('select * from public.claim_meeting_calendar()')).rejects.toThrow(
+        'permission denied',
+      );
     } finally {
       await db.exec('reset role');
     }
