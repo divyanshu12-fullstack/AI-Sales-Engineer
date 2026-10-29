@@ -91,15 +91,17 @@ describe('foundation HTTP API', () => {
       .get('/privacy')
       .expect(200)
       .expect('Content-Type', /text\/html/);
-    expect(response.text).toContain('<title>Privacy Policy | AsterByte Solutions</title>');
+    expect(response.text).toContain('<title>Privacy Policy — AsterByte Solutions</title>');
     expect(response.text).toContain('Google API Services User Data Policy');
+    expect(response.text).toContain('calendar.events');
+    expect(response.text).toContain('Limited Use requirements');
     expect(response.text).toContain('mailto:privacy@asterbyte.example');
     expect(response.headers['cache-control']).toBe('no-cache');
   });
 
   it('shows a visible contact placeholder until one is configured', async () => {
     const response = await request(makeApp()).get('/privacy').expect(200);
-    expect(response.text).toContain('[your email]');
+    expect(response.text).toContain('[ADD CONTACT EMAIL]');
   });
 
   it('responds to CORS preflight without requiring an application route', async () => {

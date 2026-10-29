@@ -7,7 +7,6 @@ This project is a working voice-agent demo for a software consultancy. A visitor
 - Live website: <https://asterbyte.divyanshu.engineer>
 - Project walkthrough and call scenarios: <https://asterbyte.divyanshu.engineer/demo>
 - Administrator sign-in: <https://asterbyte.divyanshu.engineer/admin>
-- Privacy policy: <https://asterbyte.divyanshu.engineer/privacy>
 
 The `/demo` page explains the customer journeys, voice stages, sample prompts, expected dashboard results, and current limitations. The live call requires microphone permission. Use test details and do not share passwords or sensitive information. Dashboard access requires administrator credentials from the project owner; there is no public sign-in bypass.
 
@@ -42,7 +41,7 @@ npm run dev
 
 Open the local website at <http://127.0.0.1:5173>, the walkthrough at <http://127.0.0.1:5173/demo>, and the admin sign-in at <http://127.0.0.1:5173/admin>. The development server proxies `/api` requests to Express on port 3001.
 
-The public pages can be viewed without credentials. Live calling, administrator sign-in, persistence, and email require the appropriate server-side configuration. Copy `.env.example` to `.env` only if needed, and never commit `.env` or share its secrets. Set `PRIVACY_CONTACT_EMAIL` to the address that should receive deletion and privacy requests; the public page shows `[your email]` until it is configured. Do not use real customer information for demo calls.
+The public pages can be viewed without credentials. Live calling, administrator sign-in, persistence, and email require the appropriate server-side configuration. Copy `.env.example` to `.env` only if needed, and never commit `.env` or share its secrets. Do not use real customer information for demo calls.
 
 ## Verify changes
 
