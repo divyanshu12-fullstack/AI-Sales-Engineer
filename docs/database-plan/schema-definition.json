@@ -1,0 +1,2368 @@
+{
+  "format_version": "1.0",
+  "status": "reviewed_proposal_implemented_with_documented_deviations",
+  "generated_on": "2026-10-23",
+  "database_namespace": "public (proposed; final grants/RLS must be reviewed)",
+  "tables": {
+    "agency_profile": {
+      "purpose": "Company profile and settings for AsterByte Solutions.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "singleton_key": {
+          "type": "text",
+          "nullable": false,
+          "note": "Always asterbyte; unique singleton."
+        },
+        "name": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "founded_year": {
+          "type": "integer",
+          "nullable": false,
+          "note": ""
+        },
+        "founder_display_name": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "profile_summary": {
+          "type": "text",
+          "nullable": false,
+          "note": "Company background, capabilities and service history."
+        },
+        "timezone": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "default_language": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "agent_display_name": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [],
+      "unique_constraints": [
+        [
+          "singleton_key"
+        ]
+      ],
+      "check_requirements": [
+        "singleton_key = asterbyte",
+        "founded_year BETWEEN 1900 AND 2100"
+      ],
+      "suggested_indexes": []
+    },
+    "services": {
+      "purpose": "Structured service and pricing catalog matching services-pricing.md.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "code": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "name": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "description": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "price_min_inr": {
+          "type": "numeric(12,2)",
+          "nullable": false,
+          "note": ""
+        },
+        "price_max_inr": {
+          "type": "numeric(12,2)",
+          "nullable": false,
+          "note": ""
+        },
+        "billing_unit": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "project",
+            "month",
+            "hour"
+          ]
+        },
+        "delivery_estimate": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "is_active": {
+          "type": "boolean",
+          "nullable": false,
+          "note": ""
+        },
+        "pricing_status": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "indicative",
+            "approved"
+          ]
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [],
+      "unique_constraints": [
+        [
+          "code"
+        ]
+      ],
+      "check_requirements": [
+        "price_min_inr >= 0",
+        "price_max_inr >= price_min_inr"
+      ],
+      "suggested_indexes": []
+    },
+    "employees": {
+      "purpose": "Human specialists, team responsibilities and consultation expertise.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "code": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "full_name": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "team": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "role_title": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "skills": {
+          "type": "text[]",
+          "nullable": false,
+          "note": ""
+        },
+        "consultation_topics": {
+          "type": "text[]",
+          "nullable": false,
+          "note": ""
+        },
+        "is_active": {
+          "type": "boolean",
+          "nullable": false,
+          "note": ""
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [],
+      "unique_constraints": [
+        [
+          "code"
+        ]
+      ],
+      "check_requirements": [],
+      "suggested_indexes": []
+    },
+    "customer_accounts": {
+      "purpose": "Organizations or sole traders buying or considering agency services.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "code": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "display_name": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "industry": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "relationship_stage": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "prospect",
+            "customer",
+            "former_customer"
+          ]
+        },
+        "timezone": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "notes": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [],
+      "unique_constraints": [
+        [
+          "code"
+        ]
+      ],
+      "check_requirements": [],
+      "suggested_indexes": []
+    },
+    "contacts": {
+      "purpose": "People independent of customer organizations and call history.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "code": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "full_name": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "email_normalized": {
+          "type": "text",
+          "nullable": true,
+          "note": ""
+        },
+        "phone_e164": {
+          "type": "text",
+          "nullable": true,
+          "note": "Optional normalized international phone number; null until a contact number is supplied."
+        },
+        "preferred_language": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "en",
+            "hi"
+          ]
+        },
+        "contact_source": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "web_inquiry",
+            "referral",
+            "existing_project",
+            "manual_entry"
+          ]
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [],
+      "unique_constraints": [
+        [
+          "code"
+        ]
+      ],
+      "check_requirements": [
+        "Email and phone are optional; an anonymous public inquiry need not create a contact.",
+        "When present email is trimmed/lowercase; phone format ^[+][1-9][0-9]{7,14}$; neither value proves identity."
+      ],
+      "suggested_indexes": [
+        "non-unique index on email_normalized",
+        "non-unique index on phone_e164"
+      ]
+    },
+    "account_contacts": {
+      "purpose": "Membership connects one person with one or more customer organizations.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "customer_account_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "contact_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "relationship_role": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "owner",
+            "manager",
+            "staff",
+            "requester"
+          ]
+        },
+        "membership_status": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "active",
+            "revoked"
+          ]
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [
+        {
+          "columns": [
+            "customer_account_id"
+          ],
+          "references_table": "customer_accounts",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "contact_id"
+          ],
+          "references_table": "contacts",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        }
+      ],
+      "unique_constraints": [
+        [
+          "customer_account_id",
+          "contact_id"
+        ]
+      ],
+      "check_requirements": [],
+      "suggested_indexes": []
+    },
+    "projects": {
+      "purpose": "Contracted delivery and support engagements belonging to a customer account.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "code": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "customer_account_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "name": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "product_key": {
+          "type": "text",
+          "nullable": true,
+          "note": ""
+        },
+        "summary": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "status": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "active",
+            "delivered",
+            "on_hold",
+            "archived"
+          ]
+        },
+        "contract_status": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "draft",
+            "signed"
+          ]
+        },
+        "contracted_on": {
+          "type": "date",
+          "nullable": true,
+          "note": ""
+        },
+        "lead_employee_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "agreed_budget_inr": {
+          "type": "numeric(12,2)",
+          "nullable": true,
+          "note": ""
+        },
+        "started_on": {
+          "type": "date",
+          "nullable": true,
+          "note": ""
+        },
+        "delivered_on": {
+          "type": "date",
+          "nullable": true,
+          "note": ""
+        },
+        "support_status": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "active",
+            "none"
+          ]
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [
+        {
+          "columns": [
+            "customer_account_id"
+          ],
+          "references_table": "customer_accounts",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "lead_employee_id"
+          ],
+          "references_table": "employees",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        }
+      ],
+      "unique_constraints": [
+        [
+          "code"
+        ],
+        [
+          "id",
+          "customer_account_id"
+        ]
+      ],
+      "check_requirements": [
+        "agreed_budget_inr IS NULL OR agreed_budget_inr >= 0",
+        "Signed contract requires contracted_on; delivered status requires delivered_on.",
+        "contracted_on <= started_on <= delivered_on wherever the compared dates are present."
+      ],
+      "suggested_indexes": []
+    },
+    "project_services": {
+      "purpose": "Many-to-many project/service scope; avoids comma-separated service IDs.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "project_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "service_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id"
+          ],
+          "references_table": "projects",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "service_id"
+          ],
+          "references_table": "services",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        }
+      ],
+      "unique_constraints": [
+        [
+          "project_id",
+          "service_id"
+        ]
+      ],
+      "check_requirements": [],
+      "suggested_indexes": []
+    },
+    "project_contacts": {
+      "purpose": "Explicit project permission for an account member; not proof of caller identity.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "project_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "customer_account_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "contact_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "access_role": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "project_owner",
+            "support_contact",
+            "viewer"
+          ]
+        },
+        "access_status": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "active",
+            "revoked"
+          ]
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "customer_account_id"
+          ],
+          "references_table": "projects",
+          "references_columns": [
+            "id",
+            "customer_account_id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "customer_account_id",
+            "contact_id"
+          ],
+          "references_table": "account_contacts",
+          "references_columns": [
+            "customer_account_id",
+            "contact_id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        }
+      ],
+      "unique_constraints": [
+        [
+          "project_id",
+          "contact_id"
+        ]
+      ],
+      "check_requirements": [],
+      "suggested_indexes": []
+    },
+    "calls": {
+      "purpose": "Conversation history with optional links to provider executions.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "code": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "customer_account_id": {
+          "type": "uuid",
+          "nullable": true,
+          "note": ""
+        },
+        "contact_id": {
+          "type": "uuid",
+          "nullable": true,
+          "note": ""
+        },
+        "project_id": {
+          "type": "uuid",
+          "nullable": true,
+          "note": ""
+        },
+        "channel": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "browser",
+            "phone"
+          ]
+        },
+        "direction": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "inbound",
+            "outbound"
+          ]
+        },
+        "language": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "en",
+            "hi"
+          ]
+        },
+        "agent_display_name": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "intent": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "new_project",
+            "product_support",
+            "general_inquiry"
+          ]
+        },
+        "status": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "started",
+            "completed",
+            "failed",
+            "cancelled"
+          ]
+        },
+        "identity_status": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "unverified",
+            "verified"
+          ]
+        },
+        "provider": {
+          "type": "text",
+          "nullable": true,
+          "note": ""
+        },
+        "provider_execution_id": {
+          "type": "text",
+          "nullable": true,
+          "note": ""
+        },
+        "started_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": ""
+        },
+        "ended_at": {
+          "type": "timestamptz",
+          "nullable": true,
+          "note": ""
+        },
+        "summary": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        },
+        "record_source": {
+          "type": "text",
+          "nullable": false,
+          "note": "How this conversation entered the system. Imported history does not establish provider delivery or usage.",
+          "allowed_values": [
+            "imported_history",
+            "provider"
+          ]
+        }
+      },
+      "foreign_keys": [
+        {
+          "columns": [
+            "customer_account_id"
+          ],
+          "references_table": "customer_accounts",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "contact_id"
+          ],
+          "references_table": "contacts",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "customer_account_id",
+            "contact_id"
+          ],
+          "references_table": "account_contacts",
+          "references_columns": [
+            "customer_account_id",
+            "contact_id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "project_id",
+            "customer_account_id"
+          ],
+          "references_table": "projects",
+          "references_columns": [
+            "id",
+            "customer_account_id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        }
+      ],
+      "unique_constraints": [
+        [
+          "code"
+        ]
+      ],
+      "check_requirements": [
+        "ended_at IS NULL OR ended_at >= started_at; completed requires ended_at.",
+        "customer_account_id requires contact_id for identified calls; project_id requires both account and contact.",
+        "Provider-sourced completed calls require provider and provider_execution_id; imported history can keep both null.",
+        "Imported history does not establish current caller identity; import identity_status = unverified."
+      ],
+      "suggested_indexes": [
+        "(contact_id, started_at DESC)",
+        "(customer_account_id, started_at DESC)",
+        "partial UNIQUE(provider, provider_execution_id) WHERE provider_execution_id IS NOT NULL"
+      ]
+    },
+    "inquiries": {
+      "purpose": "A sales opportunity, including new work requested by an existing customer.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "code": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "customer_account_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "contact_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "primary_service_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "owner_employee_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "source_call_id": {
+          "type": "uuid",
+          "nullable": true,
+          "note": ""
+        },
+        "title": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "requirements": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "budget_min_inr": {
+          "type": "numeric(12,2)",
+          "nullable": true,
+          "note": ""
+        },
+        "budget_max_inr": {
+          "type": "numeric(12,2)",
+          "nullable": true,
+          "note": ""
+        },
+        "requested_launch_on": {
+          "type": "date",
+          "nullable": true,
+          "note": ""
+        },
+        "stage": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "new",
+            "contacted",
+            "qualified",
+            "proposal_sent",
+            "negotiation",
+            "won",
+            "lost"
+          ]
+        },
+        "next_action": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "next_follow_up_at": {
+          "type": "timestamptz",
+          "nullable": true,
+          "note": ""
+        },
+        "converted_project_id": {
+          "type": "uuid",
+          "nullable": true,
+          "note": ""
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [
+        {
+          "columns": [
+            "customer_account_id",
+            "contact_id"
+          ],
+          "references_table": "account_contacts",
+          "references_columns": [
+            "customer_account_id",
+            "contact_id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "primary_service_id"
+          ],
+          "references_table": "services",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "owner_employee_id"
+          ],
+          "references_table": "employees",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "source_call_id"
+          ],
+          "references_table": "calls",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "converted_project_id",
+            "customer_account_id"
+          ],
+          "references_table": "projects",
+          "references_columns": [
+            "id",
+            "customer_account_id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        }
+      ],
+      "unique_constraints": [
+        [
+          "code"
+        ],
+        [
+          "id",
+          "customer_account_id"
+        ]
+      ],
+      "check_requirements": [
+        "budget_min_inr/budget_max_inr either both null or both >= 0 with max >= min.",
+        "stage won requires converted_project_id; all other stages keep it null in v1.",
+        "source_call_id, if present, must match the inquiry account and contact (transactional service validation)."
+      ],
+      "suggested_indexes": [
+        "(stage, next_follow_up_at)",
+        "customer_account_id"
+      ]
+    },
+    "support_tickets": {
+      "purpose": "Customer-specific incident records separate from public troubleshooting.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "code": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "project_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "customer_account_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "reporter_contact_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "assigned_employee_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "source_call_id": {
+          "type": "uuid",
+          "nullable": true,
+          "note": ""
+        },
+        "title": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "description": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "priority": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "P1",
+            "P2",
+            "P3",
+            "P4"
+          ]
+        },
+        "status": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "open",
+            "triaged",
+            "in_progress",
+            "waiting_customer",
+            "waiting_provider",
+            "resolved",
+            "closed"
+          ]
+        },
+        "issue_kind": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "suspected_bug",
+            "question",
+            "feature_request",
+            "security_incident"
+          ]
+        },
+        "coverage_assessment": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "pending",
+            "covered_bug",
+            "paid_change",
+            "not_applicable"
+          ]
+        },
+        "linked_guide_issue": {
+          "type": "text",
+          "nullable": true,
+          "note": ""
+        },
+        "reported_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": ""
+        },
+        "resolution_summary": {
+          "type": "text",
+          "nullable": true,
+          "note": ""
+        },
+        "resolved_at": {
+          "type": "timestamptz",
+          "nullable": true,
+          "note": ""
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [
+        {
+          "columns": [
+            "project_id",
+            "customer_account_id"
+          ],
+          "references_table": "projects",
+          "references_columns": [
+            "id",
+            "customer_account_id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "customer_account_id",
+            "reporter_contact_id"
+          ],
+          "references_table": "account_contacts",
+          "references_columns": [
+            "customer_account_id",
+            "contact_id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "assigned_employee_id"
+          ],
+          "references_table": "employees",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "source_call_id"
+          ],
+          "references_table": "calls",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        }
+      ],
+      "unique_constraints": [
+        [
+          "code"
+        ]
+      ],
+      "check_requirements": [
+        "Reporter must have active project_contacts support_contact or project_owner permission at ticket creation (service validation).",
+        "source_call_id must match account and reporter; if it has a project, it must match the ticket project.",
+        "Resolved/closed requires resolved_at and resolution_summary; other statuses keep both null in v1.",
+        "resolved_at IS NULL OR resolved_at >= reported_at."
+      ],
+      "suggested_indexes": [
+        "(project_id, status)",
+        "(priority, status)"
+      ]
+    },
+    "meetings": {
+      "purpose": "Meeting requests; a requested time is not confirmed provider availability.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "code": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "customer_account_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "contact_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "consultant_employee_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "inquiry_id": {
+          "type": "uuid",
+          "nullable": true,
+          "note": ""
+        },
+        "project_id": {
+          "type": "uuid",
+          "nullable": true,
+          "note": ""
+        },
+        "title": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "requested_start_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": ""
+        },
+        "duration_minutes": {
+          "type": "integer",
+          "nullable": false,
+          "note": ""
+        },
+        "timezone": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "status": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "requested",
+            "confirmed",
+            "cancelled",
+            "completed"
+          ]
+        },
+        "provider": {
+          "type": "text",
+          "nullable": true,
+          "note": ""
+        },
+        "provider_event_id": {
+          "type": "text",
+          "nullable": true,
+          "note": ""
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [
+        {
+          "columns": [
+            "customer_account_id",
+            "contact_id"
+          ],
+          "references_table": "account_contacts",
+          "references_columns": [
+            "customer_account_id",
+            "contact_id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "consultant_employee_id"
+          ],
+          "references_table": "employees",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "inquiry_id",
+            "customer_account_id"
+          ],
+          "references_table": "inquiries",
+          "references_columns": [
+            "id",
+            "customer_account_id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "project_id",
+            "customer_account_id"
+          ],
+          "references_table": "projects",
+          "references_columns": [
+            "id",
+            "customer_account_id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        }
+      ],
+      "unique_constraints": [
+        [
+          "code"
+        ]
+      ],
+      "check_requirements": [
+        "duration_minutes > 0",
+        "confirmed/completed real meetings require provider and provider_event_id.",
+        "Imported meeting requests keep null provider identifiers and do not block calendar slots."
+      ],
+      "suggested_indexes": [
+        "(consultant_employee_id, requested_start_at)",
+        "partial UNIQUE(provider, provider_event_id) WHERE provider_event_id IS NOT NULL"
+      ]
+    },
+    "customer_notes": {
+      "purpose": "Private customer memory with source and verification status.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "customer_account_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "contact_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "project_id": {
+          "type": "uuid",
+          "nullable": true,
+          "note": ""
+        },
+        "source_call_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "note_kind": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "requirement",
+            "preference",
+            "reported_issue",
+            "follow_up"
+          ]
+        },
+        "content": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "verification_status": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "unverified",
+            "human_reviewed"
+          ]
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [
+        {
+          "columns": [
+            "customer_account_id",
+            "contact_id"
+          ],
+          "references_table": "account_contacts",
+          "references_columns": [
+            "customer_account_id",
+            "contact_id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "project_id",
+            "customer_account_id"
+          ],
+          "references_table": "projects",
+          "references_columns": [
+            "id",
+            "customer_account_id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "source_call_id"
+          ],
+          "references_table": "calls",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        }
+      ],
+      "unique_constraints": [],
+      "check_requirements": [
+        "Source call must match note account/contact; a project-scoped source call must match note project.",
+        "human_reviewed means reviewed as a note; it does not make the content public company knowledge."
+      ],
+      "suggested_indexes": [
+        "(customer_account_id, created_at DESC)",
+        "source_call_id"
+      ]
+    },
+    "knowledge_documents": {
+      "purpose": "Versioned company knowledge catalog with review status and visibility.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "document_key": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "version": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "language": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "en",
+            "hi"
+          ]
+        },
+        "title": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "source_path": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "content_sha256": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "approval_status": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "draft",
+            "approved",
+            "retired"
+          ]
+        },
+        "visibility": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "public",
+            "internal"
+          ]
+        },
+        "content_markdown": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [],
+      "unique_constraints": [
+        [
+          "document_key",
+          "version",
+          "language"
+        ]
+      ],
+      "check_requirements": [
+        "content_sha256 must match UTF-8 bytes of content_markdown.",
+        "approval_status approved requires an explicit human approval record; all initial documents are draft."
+      ],
+      "suggested_indexes": []
+    },
+    "admin_profiles": {
+      "purpose": "Authenticated administrators linked to existing Supabase Auth users.",
+      "phase": "runtime-empty",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "display_name": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "role": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "admin"
+          ]
+        },
+        "is_active": {
+          "type": "boolean",
+          "nullable": false,
+          "note": ""
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [
+        {
+          "columns": [
+            "id"
+          ],
+          "references_table": "auth.users",
+          "references_columns": [
+            "id"
+          ],
+          "external": true,
+          "on_delete": "RESTRICT"
+        }
+      ],
+      "unique_constraints": [],
+      "check_requirements": [],
+      "suggested_indexes": []
+    },
+    "knowledge_candidates": {
+      "purpose": "Unverified proposed knowledge from calls awaiting human review.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "source_call_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "customer_account_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "contact_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "project_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "suggested_document_key": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "title": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "proposed_text": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "review_status": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "pending",
+            "approved",
+            "rejected"
+          ]
+        },
+        "reviewed_by_admin_id": {
+          "type": "uuid",
+          "nullable": true,
+          "note": ""
+        },
+        "reviewed_at": {
+          "type": "timestamptz",
+          "nullable": true,
+          "note": ""
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [
+        {
+          "columns": [
+            "source_call_id"
+          ],
+          "references_table": "calls",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "customer_account_id",
+            "contact_id"
+          ],
+          "references_table": "account_contacts",
+          "references_columns": [
+            "customer_account_id",
+            "contact_id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "project_id",
+            "customer_account_id"
+          ],
+          "references_table": "projects",
+          "references_columns": [
+            "id",
+            "customer_account_id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "reviewed_by_admin_id"
+          ],
+          "references_table": "admin_profiles",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        }
+      ],
+      "unique_constraints": [],
+      "check_requirements": [
+        "Source call must match account/contact/project.",
+        "Pending means reviewer and reviewed_at null; approved/rejected require both.",
+        "Approval never automatically publishes private customer data; redaction and document versioning are separate steps."
+      ],
+      "suggested_indexes": []
+    },
+    "activity_events": {
+      "purpose": "Committed local business audit events, not simulated live integrations.",
+      "phase": "core",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "customer_account_id": {
+          "type": "uuid",
+          "nullable": true,
+          "note": ""
+        },
+        "contact_id": {
+          "type": "uuid",
+          "nullable": true,
+          "note": ""
+        },
+        "call_id": {
+          "type": "uuid",
+          "nullable": true,
+          "note": ""
+        },
+        "actor_admin_id": {
+          "type": "uuid",
+          "nullable": true,
+          "note": ""
+        },
+        "event_type": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "history_imported",
+            "inquiry_created",
+            "project_converted",
+            "ticket_created",
+            "ticket_updated",
+            "meeting_requested",
+            "meeting_confirmed",
+            "note_recorded",
+            "knowledge_reviewed"
+          ]
+        },
+        "description": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "occurred_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": ""
+        },
+        "event_payload": {
+          "type": "jsonb",
+          "nullable": false,
+          "note": "Minimal validated subject references and change metadata; no credentials or full transcripts."
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [
+        {
+          "columns": [
+            "customer_account_id",
+            "contact_id"
+          ],
+          "references_table": "account_contacts",
+          "references_columns": [
+            "customer_account_id",
+            "contact_id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "customer_account_id"
+          ],
+          "references_table": "customer_accounts",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "contact_id"
+          ],
+          "references_table": "contacts",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "call_id"
+          ],
+          "references_table": "calls",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        },
+        {
+          "columns": [
+            "actor_admin_id"
+          ],
+          "references_table": "admin_profiles",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        }
+      ],
+      "unique_constraints": [],
+      "check_requirements": [
+        "When a call is linked, provided account/contact scopes must agree with it (transactional service validation).",
+        "History import events record local data loading, not provider executions.",
+        "Write real events in the business transaction and validate their subject references in the service."
+      ],
+      "suggested_indexes": []
+    },
+    "integration_jobs": {
+      "purpose": "Durable idempotent processing of provider webhooks and side effects.",
+      "phase": "runtime-empty",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "job_type": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "post_call",
+            "send_email",
+            "calendar_booking"
+          ]
+        },
+        "dedupe_key": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "call_id": {
+          "type": "uuid",
+          "nullable": true,
+          "note": ""
+        },
+        "status": {
+          "type": "text",
+          "nullable": false,
+          "note": "",
+          "allowed_values": [
+            "pending",
+            "processing",
+            "succeeded",
+            "failed"
+          ]
+        },
+        "attempts": {
+          "type": "integer",
+          "nullable": false,
+          "note": ""
+        },
+        "available_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": ""
+        },
+        "last_error_code": {
+          "type": "text",
+          "nullable": true,
+          "note": ""
+        },
+        "payload": {
+          "type": "jsonb",
+          "nullable": false,
+          "note": "Minimal validated task references; no credentials or unrestricted raw payloads."
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [
+        {
+          "columns": [
+            "call_id"
+          ],
+          "references_table": "calls",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        }
+      ],
+      "unique_constraints": [
+        [
+          "dedupe_key"
+        ]
+      ],
+      "check_requirements": [
+        "attempts >= 0",
+        "Initial import contains no runnable jobs."
+      ],
+      "suggested_indexes": []
+    },
+    "knowledge_chunks": {
+      "purpose": "Future approved retrieval chunks; no fabricated vectors or dimension choice.",
+      "phase": "deferred-empty",
+      "primary_key": [
+        "id"
+      ],
+      "columns": {
+        "id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": "Stable UUID primary key; production default can be gen_random_uuid()."
+        },
+        "document_id": {
+          "type": "uuid",
+          "nullable": false,
+          "note": ""
+        },
+        "chunk_index": {
+          "type": "integer",
+          "nullable": false,
+          "note": ""
+        },
+        "heading_path": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "content": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "embedding_model": {
+          "type": "text",
+          "nullable": false,
+          "note": ""
+        },
+        "embedding": {
+          "type": "vector(D)",
+          "nullable": false,
+          "note": "D must equal the chosen embedding model dimension; not chosen in this proposal."
+        },
+        "created_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; production default now()."
+        },
+        "updated_at": {
+          "type": "timestamptz",
+          "nullable": false,
+          "note": "UTC instant; maintained by application or update trigger."
+        },
+        "import_batch": {
+          "type": "text",
+          "nullable": true,
+          "note": "Import namespace for repeatable initial loading; null for records created through normal operations."
+        }
+      },
+      "foreign_keys": [
+        {
+          "columns": [
+            "document_id"
+          ],
+          "references_table": "knowledge_documents",
+          "references_columns": [
+            "id"
+          ],
+          "external": false,
+          "on_delete": "RESTRICT"
+        }
+      ],
+      "unique_constraints": [
+        [
+          "document_id",
+          "chunk_index"
+        ]
+      ],
+      "check_requirements": [
+        "chunk_index >= 0",
+        "Only approved document versions are indexed; draft documents are never retrieved.",
+        "Choose model and D in a later reviewed migration; this table is deferred, not a runnable definition."
+      ],
+      "suggested_indexes": []
+    }
+  },
+  "insert_order": [
+    "agency_profile",
+    "services",
+    "employees",
+    "customer_accounts",
+    "contacts",
+    "account_contacts",
+    "projects",
+    "project_services",
+    "project_contacts",
+    "calls",
+    "inquiries",
+    "support_tickets",
+    "meetings",
+    "customer_notes",
+    "knowledge_documents",
+    "admin_profiles",
+    "knowledge_candidates",
+    "activity_events",
+    "integration_jobs",
+    "knowledge_chunks"
+  ]
+}
