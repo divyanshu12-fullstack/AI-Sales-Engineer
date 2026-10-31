@@ -1,3 +1,6 @@
+export const demoRecordingUrl =
+  'https://drive.google.com/file/d/16mUl736IrY-09CtR2JZ4tHOO14vDxjtT/view?usp=sharing';
+
 // Read-only verified against the existing Bolna agent. Updating this copy does not change the agent.
 export const voiceStack = [
   {

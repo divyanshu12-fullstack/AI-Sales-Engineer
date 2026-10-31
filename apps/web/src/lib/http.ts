@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   browserSessionSchema,
+  callEvidenceDetailsSchema,
   dashboardSchema,
   knowledgeDocumentSchema,
 } from '@asterbyte/contracts';
@@ -72,4 +73,27 @@ export const getKnowledgeDocument = async (token: string, id: string, signal: Ab
     headers: { Authorization: `Bearer ${token}` },
   });
   return z.object({ data: knowledgeDocumentSchema }).parse(body).data;
+};
+export const getCallEvidenceDetails = async (
+  token: string,
+  executionId: string,
+  signal: AbortSignal,
+) => {
+  const body = await requestJson(`/api/admin/calls/${executionId}/details`, {
+    signal,
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return z.object({ data: callEvidenceDetailsSchema }).parse(body).data;
+};
+export const getCallRecording = async (token: string, executionId: string, signal: AbortSignal) => {
+  const timeoutSignal = AbortSignal.timeout(120_000);
+  const response = await fetch(`/api/admin/calls/${executionId}/recording`, {
+    signal: AbortSignal.any([signal, timeoutSignal]),
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new ApiRequestError(response.status);
+  const contentType = response.headers.get('content-type') ?? '';
+  if (!contentType.startsWith('audio/') && !contentType.startsWith('application/octet-stream'))
+    throw new ApiRequestError(502);
+  return response.blob();
 };

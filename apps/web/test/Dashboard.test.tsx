@@ -30,6 +30,23 @@ const state = {
       content_sha256: 'a'.repeat(64),
     }),
   ),
+  loadCallEvidence: vi.fn((execution_id: string) =>
+    Promise.resolve({
+      execution_id,
+      summary:
+        'Caller discussed an inventory and order workflow for a growing business. Requirements and next steps were collected.',
+      extracted_data: {
+        'All Industries': {
+          'Customer Name': { subjective: 'Example caller' },
+          'Customer Email': { subjective: 'caller@example.invalid' },
+        },
+        General: { 'Call Summary': { subjective: 'The complete Bolna summary.' } },
+      },
+    }),
+  ),
+  loadCallRecording: vi.fn(() =>
+    Promise.resolve(new Blob(['sample audio'], { type: 'audio/mpeg' })),
+  ),
 };
 beforeEach(() => {
   hook.mockReturnValue(state);
@@ -74,6 +91,24 @@ describe('administrator operations workspace', () => {
     ).toBeInTheDocument();
     expect(within(dialog).queryByText(/Calendar reference/)).not.toBeInTheDocument();
   });
+  it('shows the join link for a confirmed upcoming meeting', async () => {
+    const user = userEvent.setup();
+    render(<Dashboard />);
+    await user.click(
+      within(screen.getByRole('navigation')).getByRole('button', { name: 'Meetings' }),
+    );
+    const listLink = screen.getByRole('link', {
+      name: 'Join Google Meet for Website discovery call',
+    });
+    expect(listLink).toHaveAttribute('href', 'https://meet.google.com/abc-defg-hij');
+    expect(listLink).toHaveAttribute('target', '_blank');
+    await user.click(screen.getByRole('button', { name: 'Website discovery call' }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByRole('link', { name: 'Join Google Meet' })).toHaveAttribute(
+      'href',
+      'https://meet.google.com/abc-defg-hij',
+    );
+  });
   it('filters loaded calls by source and status and shows recoverable empty results', async () => {
     const user = userEvent.setup();
     render(<Dashboard />);
@@ -90,6 +125,14 @@ describe('administrator operations workspace', () => {
     await user.click(screen.getByRole('button', { name: /20000000-0000-4000-8000-000000000001/ }));
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByText('caller@example.invalid')).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        'Caller discussed an inventory and order workflow for a growing business. Requirements and next steps were collected.',
+      ),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByText('Bolna extractions')).toBeInTheDocument();
+    expect(within(dialog).getByText(/Customer Email/)).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Load call recording' })).toBeInTheDocument();
     expect(within(dialog).getByText('No linked inquiry in recent records.')).toBeInTheDocument();
     expect(
       within(dialog).getByText('As reported by the caller · not verified'),

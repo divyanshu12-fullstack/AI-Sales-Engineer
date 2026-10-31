@@ -255,6 +255,12 @@ export const dashboardSchema = z.strictObject({
     .default([]),
 });
 export type Dashboard = z.infer<typeof dashboardSchema>;
+export const callEvidenceDetailsSchema = z.strictObject({
+  execution_id: z.uuid(),
+  summary: z.string().max(20_000).nullable(),
+  extracted_data: z.record(z.string(), z.json()),
+});
+export type CallEvidenceDetails = z.infer<typeof callEvidenceDetailsSchema>;
 export const knowledgeDocumentSchema = z.object({
   id: z.uuid(),
   title: z.string(),

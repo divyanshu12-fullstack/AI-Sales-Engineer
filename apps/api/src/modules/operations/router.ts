@@ -1,4 +1,5 @@
 import express from 'express';
+import { Readable } from 'node:stream';
 import type { Logger } from 'pino';
 import type { Env } from '../../config/env.js';
 import { requireAdmin, requireProviderToken } from '../../http/auth.js';
@@ -27,6 +28,38 @@ export const operationsRouter = (config: Env, logger: Logger) => {
   router.get('/admin/activity', requireAdmin(config, service.database), async (_req, res) => {
     res.json({ data: await service.dashboard() });
   });
+  router.get(
+    '/admin/calls/:executionId/details',
+    requireAdmin(config, service.database),
+    async (req, res) => {
+      const parsed = z.uuid().safeParse(req.params.executionId);
+      if (!parsed.success) throw new HttpError(400, 'INVALID_INPUT', 'Invalid call reference.');
+      res.setHeader('Cache-Control', 'private, no-store');
+      res.json({ data: await service.callEvidence(parsed.data) });
+    },
+  );
+  router.get(
+    '/admin/calls/:executionId/recording',
+    requireAdmin(config, service.database),
+    async (req, res, next) => {
+      const parsed = z.uuid().safeParse(req.params.executionId);
+      if (!parsed.success) throw new HttpError(400, 'INVALID_INPUT', 'Invalid call reference.');
+      const recording = await service.callRecording(parsed.data);
+      res.setHeader('Cache-Control', 'private, no-store');
+      res.setHeader('Content-Type', recording.contentType);
+      res.setHeader('Content-Disposition', 'inline; filename="call-recording"');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      if (recording.contentLength && /^\d+$/.test(recording.contentLength))
+        res.setHeader('Content-Length', recording.contentLength);
+      const stream = Readable.fromWeb(recording.body);
+      stream.on('error', () => {
+        if (!res.headersSent)
+          next(new HttpError(502, 'UPSTREAM_ERROR', 'The call recording stream was interrupted.'));
+        else res.destroy();
+      });
+      stream.pipe(res);
+    },
+  );
   router.get('/admin/knowledge/:id', requireAdmin(config, service.database), async (req, res) => {
     const parsed = z.uuid().safeParse(req.params.id);
     if (!parsed.success) throw new HttpError(400, 'INVALID_INPUT', 'Invalid document reference.');

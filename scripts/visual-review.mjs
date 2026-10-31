@@ -277,6 +277,21 @@ try {
   await admin.route('**/api/admin/activity', (route) =>
     route.fulfill({ contentType: 'application/json', body: JSON.stringify({ data: fixture }) }),
   );
+  await admin.route('**/api/admin/calls/*/details', (route) =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          execution_id: fixture.calls[0].provider_execution_id,
+          summary: fixture.calls[0].summary,
+          extracted_data: {
+            General: { 'Call Summary': { subjective: fixture.calls[0].summary } },
+            'All Industries': { 'Customer Name': { subjective: 'Example caller' } },
+          },
+        },
+      }),
+    }),
+  );
   await admin.route('**/api/admin/knowledge/*', (route) =>
     route.fulfill({
       contentType: 'application/json',

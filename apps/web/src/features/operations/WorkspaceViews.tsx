@@ -396,6 +396,18 @@ export const WorkspaceViews = ({
                       <td>
                         <RecordButton onOpen={open('meeting', m.id)}>{m.title}</RecordButton>
                         <p className="cell-muted">{m.duration_minutes} min</p>
+                        {m.status === 'confirmed' && m.meet_url && (
+                          <a
+                            className="meeting-join-link"
+                            href={m.meet_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Join Google Meet for ${m.title}`}
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            Join Google Meet <ArrowUpRight size={13} />
+                          </a>
+                        )}
                       </td>
                       <td className="date-cell">{time(m.requested_start_at)}</td>
                       <td>{m.employees?.full_name ?? 'Unassigned'}</td>

@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { X, ArrowUpRight } from 'lucide-react';
-import type { Dashboard, KnowledgeDocument } from '@asterbyte/contracts';
+import type { CallEvidenceDetails, Dashboard, KnowledgeDocument } from '@asterbyte/contracts';
+import { ApiRequestError } from '../../lib/http.js';
 import { knowledgeId, label, time, callLabel, duration } from './presentation.js';
 import { KnowledgeReader } from './KnowledgeReader.js';
 import { Badge } from './Badge.js';
@@ -13,18 +14,140 @@ const Field = ({ name, children }: { name: string; children: ReactNode }) => (
     <dd>{children ?? 'Not available'}</dd>
   </div>
 );
+const CallArtifacts = ({
+  executionId,
+  fallbackSummary,
+  loadEvidence,
+  loadRecording,
+}: {
+  executionId: string;
+  fallbackSummary: string;
+  loadEvidence: (executionId: string, signal: AbortSignal) => Promise<CallEvidenceDetails>;
+  loadRecording: (executionId: string, signal: AbortSignal) => Promise<Blob>;
+}) => {
+  const [evidence, setEvidence] = useState<CallEvidenceDetails | null>(null);
+  const [evidenceLoading, setEvidenceLoading] = useState(true);
+  const [evidenceError, setEvidenceError] = useState(false);
+  const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
+  const [recordingLoading, setRecordingLoading] = useState(false);
+  const [recordingError, setRecordingError] = useState('');
+  const recordingController = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void loadEvidence(executionId, controller.signal)
+      .then((details) => setEvidence(details))
+      .catch(() => {
+        if (!controller.signal.aborted) setEvidenceError(true);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setEvidenceLoading(false);
+      });
+    return () => {
+      controller.abort();
+      recordingController.current?.abort();
+    };
+  }, [executionId, loadEvidence]);
+
+  useEffect(
+    () => () => {
+      if (recordingUrl) URL.revokeObjectURL(recordingUrl);
+    },
+    [recordingUrl],
+  );
+
+  const fetchRecording = async () => {
+    recordingController.current?.abort();
+    const controller = new AbortController();
+    recordingController.current = controller;
+    setRecordingLoading(true);
+    setRecordingError('');
+    try {
+      const blob = await loadRecording(executionId, controller.signal);
+      if (controller.signal.aborted) return;
+      setRecordingUrl(URL.createObjectURL(blob));
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      setRecordingError(
+        error instanceof ApiRequestError && error.status === 404
+          ? 'No recording is available for this call.'
+          : 'The recording could not be loaded. Please try again.',
+      );
+    } finally {
+      if (!controller.signal.aborted) setRecordingLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <Field name="Full call summary">
+        <p className="preserve-text">
+          {evidence?.summary || fallbackSummary || 'No summary returned by Bolna.'}
+        </p>
+      </Field>
+      <Field name="Bolna extractions">
+        {evidence ? (
+          Object.keys(evidence.extracted_data).length ? (
+            <pre className="preserve-text call-extraction-json">
+              {JSON.stringify(evidence.extracted_data, null, 2)}
+            </pre>
+          ) : (
+            'Bolna returned no extractions for this call.'
+          )
+        ) : evidenceLoading ? (
+          'Loading call extractions…'
+        ) : evidenceError ? (
+          'Call extractions could not be loaded. Reopen the call to try again.'
+        ) : (
+          'Bolna returned no extractions for this call.'
+        )}
+      </Field>
+      <Field name="Voice recording">
+        {recordingUrl ? (
+          <audio
+            aria-label="Call recording player"
+            className="call-recording-player"
+            controls
+            preload="metadata"
+            src={recordingUrl}
+          >
+            Audio playback is not supported by this browser.
+          </audio>
+        ) : (
+          <button
+            className="call-recording-load"
+            type="button"
+            disabled={recordingLoading}
+            onClick={() => void fetchRecording()}
+          >
+            {recordingLoading ? 'Loading recording…' : 'Load call recording'}
+          </button>
+        )}
+        {recordingError && (
+          <p role="status" className="call-recording-error">
+            {recordingError}
+          </p>
+        )}
+      </Field>
+    </>
+  );
+};
 export const RecordDetails = ({
   selection,
   data,
   onClose,
   onSelect,
   loadDocument,
+  loadCallEvidence,
+  loadCallRecording,
 }: {
   selection: Selection | null;
   data: Dashboard;
   onClose: () => void;
   onSelect: (selection: Selection) => void;
   loadDocument: (id: string, signal: AbortSignal) => Promise<KnowledgeDocument>;
+  loadCallEvidence: (executionId: string, signal: AbortSignal) => Promise<CallEvidenceDetails>;
+  loadCallRecording: (executionId: string, signal: AbortSignal) => Promise<Blob>;
 }) => {
   const dialog = useRef<HTMLDialogElement>(null);
   const open = selection !== null;
@@ -120,9 +243,19 @@ export const RecordDetails = ({
                   {call.direction ? ` · ${label(call.direction)}` : ''}
                 </Field>
               )}
-              <Field name="Summary">
-                <p className="preserve-text">{call.summary || 'No summary yet.'}</p>
-              </Field>
+              {call.provider_execution_id ? (
+                <CallArtifacts
+                  key={call.id}
+                  executionId={call.provider_execution_id}
+                  fallbackSummary={call.summary || evidence?.summary || ''}
+                  loadEvidence={loadCallEvidence}
+                  loadRecording={loadCallRecording}
+                />
+              ) : (
+                <Field name="Full call summary">
+                  <p className="preserve-text">{call.summary || 'No summary yet.'}</p>
+                </Field>
+              )}
               {evidence && (
                 <>
                   <Field name="Provider status">{label(evidence.provider_status)}</Field>
@@ -359,6 +492,18 @@ export const RecordDetails = ({
                 </Field>
               )}
               <Field name="Reference">{meeting.code}</Field>
+              {meeting.status === 'confirmed' && meeting.meet_url && (
+                <Field name="Google Meet">
+                  <a
+                    className="detail-link"
+                    href={meeting.meet_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Join Google Meet <ArrowUpRight size={14} />
+                  </a>
+                </Field>
+              )}
               {meeting.provider_event_id && meeting.provider !== 'customer_confirmation' && (
                 <Field name="Calendar reference">
                   {meeting.provider} · {meeting.provider_event_id}

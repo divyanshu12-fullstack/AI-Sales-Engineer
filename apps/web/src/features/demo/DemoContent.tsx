@@ -3,7 +3,7 @@ import { ArrowUpRight, Plus } from 'lucide-react';
 import { VoicePanel } from '../voice/VoicePanel.js';
 import type { VoiceCall } from '../voice/VoicePanel.js';
 import { CustomerJourneys } from './CustomerJourneys.js';
-import { scenarios, voiceStack } from './content.js';
+import { demoRecordingUrl, scenarios, voiceStack } from './content.js';
 
 const contents = [
   ['01', 'What we built', '#about-demo'],
@@ -68,6 +68,14 @@ export const DemoContent = ({
             </dd>
           </div>
         </dl>
+        <a
+          className="project-dashboard-link"
+          href={demoRecordingUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Open the demo recording <ArrowUpRight size={16} />
+        </a>
       </header>
 
       <section className="project-section" id="why-this-project">
@@ -258,8 +266,8 @@ export const DemoContent = ({
           <div>
             <dt>Calls</dt>
             <dd>
-              Start time and duration, followed by the summary and available extracted details once
-              Bolna processes the completed call.
+              Start time and duration, followed by the full Bolna summary, extracted data and an
+              on-demand recording player when a recording is available.
             </dd>
           </div>
           <div>

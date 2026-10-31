@@ -76,6 +76,10 @@ describe('public consultancy website', () => {
       'href',
       '/admin',
     );
+    expect(screen.getByRole('link', { name: 'Open the demo recording' })).toHaveAttribute(
+      'href',
+      'https://drive.google.com/file/d/16mUl736IrY-09CtR2JZ4tHOO14vDxjtT/view?usp=sharing',
+    );
     expect(
       screen.getByText(/Customer\/project codes are not login credentials/),
     ).toBeInTheDocument();

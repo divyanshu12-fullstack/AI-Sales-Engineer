@@ -5,6 +5,8 @@ import type { Dashboard } from '@asterbyte/contracts';
 import {
   ApiRequestError,
   getActivity,
+  getCallEvidenceDetails,
+  getCallRecording,
   getAuthConfig,
   updateSupportTicket,
   retrySupportEmail,
@@ -140,8 +142,24 @@ export const useOperations = () => {
     },
     [token],
   );
+  const loadCallEvidence = useCallback(
+    async (executionId: string, signal: AbortSignal) => {
+      if (!token) throw new Error('Sign in to continue.');
+      return getCallEvidenceDetails(token, executionId, signal);
+    },
+    [token],
+  );
+  const loadCallRecording = useCallback(
+    async (executionId: string, signal: AbortSignal) => {
+      if (!token) throw new Error('Sign in to continue.');
+      return getCallRecording(token, executionId, signal);
+    },
+    [token],
+  );
   return {
     loadKnowledge,
+    loadCallEvidence,
+    loadCallRecording,
     ready: Boolean(client),
     signedIn: Boolean(token),
     data,

@@ -2369,6 +2369,19 @@
     font-size: 10px;
     line-height: 1.8;
   }
+  .meeting-join-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 5px;
+    color: #4d7a42;
+    font-size: 10px;
+    line-height: 1.5;
+    text-decoration: none;
+  }
+  .meeting-join-link:hover {
+    text-decoration: underline;
+  }
   .row-open {
     border: 0;
     background: transparent;
@@ -2568,6 +2581,40 @@
   .preserve-text {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+  }
+  .call-extraction-json {
+    max-height: 360px;
+    overflow: auto;
+    margin: 0;
+    padding: 12px;
+    border-radius: 4px;
+    background: #f4f7f1;
+    color: #43513c;
+    font:
+      11px/1.65 ui-monospace,
+      monospace;
+  }
+  .call-recording-player {
+    display: block;
+    width: 100%;
+    margin-block: 7px;
+  }
+  .call-recording-load {
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 1px solid #cad8ca;
+    border-radius: 4px;
+    background: #f4f7f1;
+    color: #31563c;
+    font-size: 12px;
+  }
+  .call-recording-load:disabled {
+    opacity: 0.65;
+  }
+  .call-recording-error {
+    margin-top: 8px;
+    color: #8a3c32;
+    font-size: 11px;
   }
   .observation-note {
     color: #8a9a77;

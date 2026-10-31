@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   dashboardSchema,
+  callEvidenceDetailsSchema,
   inquiryInputSchema,
   inquiryResultSchema,
   knowledgeQuestionSchema,
@@ -122,6 +123,59 @@ export class Operations {
       evidence: execution,
     });
     return z.object({ accepted: z.literal(true), changed: z.boolean() }).parse(result);
+  }
+
+  async callEvidence(executionId: string) {
+    const rows = z
+      .array(callEvidenceDetailsSchema)
+      .parse(
+        await this.database.request(
+          `call_evidence?select=execution_id,summary,extracted_data&execution_id=eq.${executionId}&limit=1`,
+        ),
+      );
+    if (!rows[0]) throw new HttpError(404, 'NOT_FOUND', 'Call details were not found.');
+    return rows[0];
+  }
+
+  async callRecording(executionId: string) {
+    const records = z
+      .array(z.object({ execution_id: z.uuid() }))
+      .parse(
+        await this.database.request(
+          `call_evidence?select=execution_id&execution_id=eq.${executionId}&limit=1`,
+        ),
+      );
+    if (!records.length) throw new HttpError(404, 'NOT_FOUND', 'Call details were not found.');
+    if (!this.config.BOLNA_API_KEY)
+      throw new HttpError(503, 'INTEGRATION_UNAVAILABLE', 'Recording playback is unavailable.');
+
+    let response: Response;
+    try {
+      response = await fetch(`https://api.bolna.ai/recordings/call/${executionId}`, {
+        headers: { Authorization: `Bearer ${this.config.BOLNA_API_KEY}` },
+        redirect: 'follow',
+        signal: AbortSignal.timeout(120_000),
+      });
+    } catch {
+      throw new HttpError(502, 'UPSTREAM_ERROR', 'The call recording could not be reached.');
+    }
+    if (response.status === 404 || response.status === 410)
+      throw new HttpError(404, 'NOT_FOUND', 'No recording is available for this call.');
+    if (!response.ok)
+      throw new HttpError(502, 'UPSTREAM_ERROR', 'The call recording could not be loaded.');
+    const contentType = response.headers.get('content-type') ?? '';
+    if (
+      !/^audio\/[\w.+-]+(?:\s*;.*)?$/i.test(contentType) &&
+      !/^application\/octet-stream(?:\s*;.*)?$/i.test(contentType)
+    )
+      throw new HttpError(502, 'UPSTREAM_ERROR', 'Bolna did not return an audio recording.');
+    if (!response.body)
+      throw new HttpError(502, 'UPSTREAM_ERROR', 'Bolna returned an empty recording.');
+    return {
+      body: response.body,
+      contentType,
+      contentLength: response.headers.get('content-length'),
+    };
   }
 
   async dashboard() {

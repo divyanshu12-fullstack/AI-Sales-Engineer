@@ -10,6 +10,8 @@
       "status": "confirmed",
       "provider": "google",
       "provider_event_id": "fixture-calendar-event",
+      "calendar_event_url": "https://calendar.google.com/calendar/event?eid=fixture",
+      "meet_url": "https://meet.google.com/abc-defg-hij",
       "inquiry_id": "30000000-0000-4000-8000-000000000001",
       "project_id": null,
       "employees": { "full_name": "Example consultant" }

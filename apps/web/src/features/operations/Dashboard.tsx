@@ -277,6 +277,8 @@ export const Dashboard = () => {
                 onClose={() => setSelection(null)}
                 onSelect={setSelection}
                 loadDocument={state.loadKnowledge}
+                loadCallEvidence={state.loadCallEvidence}
+                loadCallRecording={state.loadCallRecording}
               />
             </>
           ) : state.access === 'loading' ? (

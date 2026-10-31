@@ -209,6 +209,77 @@ describe('authenticated operational endpoints', () => {
     expect(response.body).toMatchObject({ data: { content_markdown: '# Company guide' } });
     expect(response.text).not.toContain('server-key');
   });
+  it('returns full Bolna summary and extractions only to an active administrator', async () => {
+    const extracted_data = {
+      General: { 'Call Summary': { subjective: 'The full call summary.' } },
+      'All Industries': { 'Customer Email': { subjective: 'caller@example.invalid' } },
+    };
+    const fetch = vi.fn((input: URL | string) => {
+      const url = new URL(input);
+      return Promise.resolve(
+        url.pathname === '/auth/v1/user'
+          ? json({ id: agent })
+          : url.pathname.endsWith('/admin_profiles')
+            ? json([{ id: agent }])
+            : url.pathname.endsWith('/call_evidence')
+              ? json([
+                  { execution_id: execution, summary: 'The full call summary.', extracted_data },
+                ])
+              : json([]),
+      );
+    });
+    vi.stubGlobal('fetch', fetch);
+    await request(app()).get(`/api/admin/calls/${execution}/details`).expect(401);
+    const response = await request(app())
+      .get(`/api/admin/calls/${execution}/details`)
+      .set('Authorization', 'Bearer valid-admin');
+    expect(response.status, JSON.stringify(response.body)).toBe(200);
+    expect(response.body).toMatchObject({
+      data: {
+        execution_id: execution,
+        summary: 'The full call summary.',
+        extracted_data,
+      },
+    });
+    expect(
+      fetch.mock.calls.some(([input]) => new URL(input).pathname.endsWith('/call_evidence')),
+    ).toBe(true);
+  });
+  it('streams Bolna recordings through the authenticated no-store admin endpoint', async () => {
+    const fetch = vi.fn((input: URL | string) => {
+      const url = new URL(input);
+      if (url.pathname === '/auth/v1/user') return Promise.resolve(json({ id: agent }));
+      if (url.pathname.endsWith('/admin_profiles')) return Promise.resolve(json([{ id: agent }]));
+      if (url.pathname.endsWith('/call_evidence'))
+        return Promise.resolve(json([{ execution_id: execution }]));
+      if (url.pathname === `/recordings/call/${execution}`)
+        return Promise.resolve(
+          new Response(Buffer.from('sample recording'), {
+            headers: { 'Content-Type': 'audio/mpeg', 'Content-Length': '16' },
+          }),
+        );
+      return Promise.resolve(json([], 404));
+    });
+    vi.stubGlobal('fetch', fetch);
+    await request(app()).get(`/api/admin/calls/${execution}/recording`).expect(401);
+    expect(fetch).not.toHaveBeenCalled();
+    const response = await request(app())
+      .get(`/api/admin/calls/${execution}/recording`)
+      .set('Authorization', 'Bearer valid-admin')
+      .expect(200);
+    expect(response.headers['content-type']).toMatch(/^audio\/mpeg/);
+    expect(response.headers['cache-control']).toBe('private, no-store');
+    expect(response.headers['x-content-type-options']).toBe('nosniff');
+    expect(Buffer.from(response.body).toString('utf8')).toBe('sample recording');
+    expect(
+      fetch.mock.calls.some(
+        ([input]) =>
+          new URL(input).origin === 'https://api.bolna.ai' &&
+          new URL(input).pathname === `/recordings/call/${execution}`,
+      ),
+    ).toBe(true);
+    expect(JSON.stringify(response.headers)).not.toContain('bolna-key');
+  });
   it('adds stored tool relationships and source metadata only after the active-admin gate', async () => {
     const passage = '00000000-0000-4000-8000-000000000003';
     const document = '00000000-0000-4000-8000-000000000004';
